@@ -1,7 +1,6 @@
 # Library Management System
 
 Web application for managing a library: catalogue, members, loans, and overdue tracking.
-Replaces an older Java/Hibernate/Tomcat system currently in production at two libraries.
 
 **Stack:** Spring Boot 3 (Java 25) · Angular + Angular Material · PostgreSQL 16 · Flyway · Docker
 
