@@ -80,14 +80,23 @@ Implemented once as a `@RestControllerAdvice` — not per-controller.
 | `BOOK_HAS_OPEN_LOAN` | 409 | Removing a book that has an open loan |
 | `BOOK_NOT_REMOVED` | 409 | Restoring a book whose status is already `ACTIVE` |
 | `BOOK_NUMBER_TAKEN_ON_RESTORE` | 409 | Restoring a book whose number has since been taken by an active book |
+| `BOOK_NOT_FOUND` | 404 | No book with the given id (or, for `by-number`, no **active** book with that number) |
 | `MEMBER_TOO_MANY_LOANS` | 409 | Member already holds `MAX_BOOKS_PER_MEMBER` open loans |
 | `MEMBER_NAME_ALREADY_EXISTS` | 409 | Duplicate active member name |
 | `MEMBER_HAS_OPEN_LOANS` | 409 | Archiving a member with open loans |
+| `MEMBER_NOT_FOUND` | 404 | No active member with the given id |
 | `CATEGORY_NAME_ALREADY_EXISTS` | 409 | Duplicate active category name |
 | `CATEGORY_HAS_BOOKS` | 409 | Archiving a category that still has active books |
+| `CATEGORY_NOT_FOUND` | 404 | No active category with the given id |
 | `LOAN_ALREADY_FINISHED` | 409 | Returning a loan already in `FINISHED` |
+| `LOAN_NOT_FOUND` | 404 | No loan with the given id |
 | `PARAMETER_INVALID_VALUE` | 400 | Parameter value not a positive integer |
-| `VALIDATION_ERROR` | 400 | Bean Validation failure |
+| `VALIDATION_ERROR` | 400 | Bean Validation failure, unreadable JSON body, or a path/query parameter of the wrong type |
+| `RESOURCE_NOT_FOUND` | 404 | No endpoint matches the request path (fallback — not a business rule) |
+| `DATA_INTEGRITY_VIOLATION` | 409 | A database constraint rejected the write and no more specific code applies (fallback) |
+| `INTERNAL_ERROR` | 500 | Unhandled server-side failure — the `message` is deliberately generic and never exposes internals |
+
+Every error carries a code: the `@RestControllerAdvice` maps unexpected failures onto the three fallback codes above rather than letting a framework error page escape, so the frontend can key its translations off `code` alone and never has to branch on the HTTP status.
 
 ---
 
@@ -190,12 +199,18 @@ Errors: `BOOK_NOT_REMOVED` (409) if already active; `BOOK_NUMBER_TAKEN_ON_RESTOR
 | Method | Path | Body | Success | Errors |
 |---|---|---|---|---|
 | `GET` | `/api/categories` | — | `200` `CategoryResponse[]` | — |
-| `GET` | `/api/categories/{id}` | — | `200` `CategoryResponse` | `404` |
-| `POST` | `/api/categories` | `CategoryRequest` | `201` | `CATEGORY_NAME_ALREADY_EXISTS` |
-| `PUT` | `/api/categories/{id}` | `CategoryRequest` | `200` | `CATEGORY_NAME_ALREADY_EXISTS` |
-| `DELETE` | `/api/categories/{id}` | — | `204` | `CATEGORY_HAS_BOOKS` |
+| `GET` | `/api/categories/{id}` | — | `200` `CategoryResponse` | `CATEGORY_NOT_FOUND` |
+| `POST` | `/api/categories` | `CategoryRequest` | `201` `CategoryResponse` | `CATEGORY_NAME_ALREADY_EXISTS` |
+| `PUT` | `/api/categories/{id}` | `CategoryRequest` | `200` `CategoryResponse` | `CATEGORY_NAME_ALREADY_EXISTS`, `CATEGORY_NOT_FOUND` |
+| `DELETE` | `/api/categories/{id}` | — | `204` no body | `CATEGORY_HAS_BOOKS`, `CATEGORY_NOT_FOUND` |
 
 Returns a plain array, not paged — a library has few categories.
+
+`POST` and `PUT` both return the saved `CategoryResponse` (`POST` also sets `Location: /api/categories/{id}`), so the frontend can update its table from the response instead of re-fetching the list.
+
+Only **active** categories are addressable: an archived one is `CATEGORY_NOT_FOUND` on every endpoint. There is no restore — categories archived in error are re-created (`DATA_MODEL.md` §4.1).
+
+### `CategoryResponse`
 
 ```json
 { "id": 3, "name": "Fiction", "description": "Novels and short stories", "bookCount": 42 }

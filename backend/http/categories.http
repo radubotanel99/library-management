@@ -1,0 +1,92 @@
+# Categories -- API_CONTRACT.md §6
+#
+# Run the dev database and the backend first:
+#   docker compose -f compose.dev.yaml up -d
+#   cd backend && mvn spring-boot:run
+#
+# Requests are ordered so they can be run top to bottom on a fresh database.
+# {{id}} is captured from the create request below.
+
+@host = http://localhost:8080
+@id = 1
+
+### List active categories -- 200, plain array (not paged)
+GET {{host}}/api/categories
+
+### Create -- 201 CategoryResponse + Location header
+POST {{host}}/api/categories
+Content-Type: application/json
+
+{
+  "name": "Fiction",
+  "description": "Novels and short stories"
+}
+
+### Create a second one -- 201
+POST {{host}}/api/categories
+Content-Type: application/json
+
+{
+  "name": "History",
+  "description": null
+}
+
+### Duplicate name, different case -- 409 CATEGORY_NAME_ALREADY_EXISTS (field: "name")
+# Uniqueness is on lower(name) among active rows (ux_category_name_active).
+POST {{host}}/api/categories
+Content-Type: application/json
+
+{
+  "name": "fiction"
+}
+
+### Blank name -- 400 VALIDATION_ERROR (field: "name")
+POST {{host}}/api/categories
+Content-Type: application/json
+
+{
+  "name": "   "
+}
+
+### Two invalid fields -- 400 VALIDATION_ERROR, field is the alphabetically first ("description")
+POST {{host}}/api/categories
+Content-Type: application/json
+
+{
+  "name": "",
+  "description": "ddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddddd"
+}
+
+### Get by id -- 200 CategoryResponse
+GET {{host}}/api/categories/{{id}}
+
+### Get by id, unknown -- 404 CATEGORY_NOT_FOUND
+# An archived category answers the same way: it is not addressable.
+GET {{host}}/api/categories/999999
+
+### Get by id, non-numeric -- 400 VALIDATION_ERROR (field: "id")
+GET {{host}}/api/categories/abc
+
+### Update -- 200 CategoryResponse
+PUT {{host}}/api/categories/{{id}}
+Content-Type: application/json
+
+{
+  "name": "Fiction",
+  "description": "Novels, novellas and short stories"
+}
+
+### Update to a name another active category already uses -- 409 CATEGORY_NAME_ALREADY_EXISTS
+PUT {{host}}/api/categories/{{id}}
+Content-Type: application/json
+
+{
+  "name": "History"
+}
+
+### Archive (soft delete) an empty category -- 204 No Content
+# There is no restore endpoint: an archive done in error is re-created (DATA_MODEL.md §4.1).
+DELETE {{host}}/api/categories/{{id}}
+
+### Archive a category that still has active books -- 409 CATEGORY_HAS_BOOKS
+DELETE {{host}}/api/categories/2

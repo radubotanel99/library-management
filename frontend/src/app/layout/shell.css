@@ -1,0 +1,26 @@
+:host {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+.title {
+  font: var(--mat-sys-title-medium);
+  margin-inline-end: 1.5rem;
+}
+
+.spacer {
+  flex: 1 1 auto;
+}
+
+.active-link {
+  text-decoration: underline;
+}
+
+main {
+  flex: 1 1 auto;
+  max-width: 60rem;
+  width: 100%;
+  margin: 0 auto;
+  box-sizing: border-box;
+}

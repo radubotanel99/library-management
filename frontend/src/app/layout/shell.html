@@ -1,0 +1,31 @@
+<mat-toolbar color="primary">
+  <span class="title">{{ 'app.title' | translate }}</span>
+
+  <nav>
+    <a matButton routerLink="/categories" routerLinkActive="active-link">
+      {{ 'nav.categories' | translate }}
+    </a>
+  </nav>
+
+  <span class="spacer"></span>
+
+  <button
+    matButton
+    [matMenuTriggerFor]="languageMenu"
+    [attr.aria-label]="'common.language' | translate"
+  >
+    <mat-icon>language</mat-icon>
+    {{ langLabel(lang()) | translate }}
+  </button>
+  <mat-menu #languageMenu="matMenu">
+    @for (option of langs; track option) {
+      <button mat-menu-item [disabled]="option === lang()" (click)="setLang(option)">
+        {{ langLabel(option) | translate }}
+      </button>
+    }
+  </mat-menu>
+</mat-toolbar>
+
+<main>
+  <router-outlet />
+</main>
