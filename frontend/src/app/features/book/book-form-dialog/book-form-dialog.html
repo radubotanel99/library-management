@@ -1,0 +1,90 @@
+<h2 mat-dialog-title>
+  {{ (book ? 'book.form.editTitle' : 'book.form.createTitle') | translate }}
+</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <mat-dialog-content>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'book.form.title' | translate }}</mat-label>
+      <input matInput formControlName="title" />
+      @if (form.controls.title.hasError('required')) {
+        <mat-error>{{ 'validation.required' | translate }}</mat-error>
+      } @else if (form.controls.title.hasError('maxlength')) {
+        <mat-error>{{ 'validation.maxLength' | translate: { max: titleMaxLength } }}</mat-error>
+      } @else if (form.controls.title.hasError('server')) {
+        <mat-error>{{ 'validation.server' | translate }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'book.form.author' | translate }}</mat-label>
+      <input matInput formControlName="author" />
+      @if (form.controls.author.hasError('required')) {
+        <mat-error>{{ 'validation.required' | translate }}</mat-error>
+      } @else if (form.controls.author.hasError('maxlength')) {
+        <mat-error>{{ 'validation.maxLength' | translate: { max: authorMaxLength } }}</mat-error>
+      } @else if (form.controls.author.hasError('server')) {
+        <mat-error>{{ 'validation.server' | translate }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'book.form.bookNumber' | translate }}</mat-label>
+      <input matInput type="number" formControlName="bookNumber" [min]="bookNumberMin" />
+      @if (form.controls.bookNumber.hasError('required')) {
+        <mat-error>{{ 'validation.required' | translate }}</mat-error>
+      } @else if (form.controls.bookNumber.hasError('min')) {
+        <mat-error>{{ 'validation.min' | translate: { min: bookNumberMin } }}</mat-error>
+      } @else if (form.controls.bookNumber.hasError('duplicate')) {
+        <mat-error>{{ 'error.BOOK_NUMBER_ALREADY_EXISTS' | translate }}</mat-error>
+      } @else if (form.controls.bookNumber.hasError('server')) {
+        <mat-error>{{ 'validation.server' | translate }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'book.form.categoryId' | translate }}</mat-label>
+      <mat-select formControlName="categoryId">
+        @for (category of categories(); track category.id) {
+          <mat-option [value]="category.id">{{ category.name }}</mat-option>
+        }
+      </mat-select>
+      @if (form.controls.categoryId.hasError('required')) {
+        <mat-error>{{ 'validation.required' | translate }}</mat-error>
+      } @else if (form.controls.categoryId.hasError('duplicate')) {
+        <mat-error>{{ 'error.CATEGORY_NOT_FOUND' | translate }}</mat-error>
+      } @else if (form.controls.categoryId.hasError('server')) {
+        <mat-error>{{ 'validation.server' | translate }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'book.form.publisher' | translate }}</mat-label>
+      <input matInput formControlName="publisher" />
+      @if (form.controls.publisher.hasError('maxlength')) {
+        <mat-error>{{ 'validation.maxLength' | translate: { max: publisherMaxLength } }}</mat-error>
+      } @else if (form.controls.publisher.hasError('server')) {
+        <mat-error>{{ 'validation.server' | translate }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'book.form.price' | translate }}</mat-label>
+      <input matInput type="number" formControlName="price" [min]="priceMin" step="0.01" />
+      @if (form.controls.price.hasError('min')) {
+        <mat-error>{{ 'validation.min' | translate: { min: priceMin } }}</mat-error>
+      } @else if (form.controls.price.hasError('server')) {
+        <mat-error>{{ 'validation.server' | translate }}</mat-error>
+      }
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton type="button" mat-dialog-close [disabled]="saving()">
+      {{ 'common.cancel' | translate }}
+    </button>
+    <button matButton="filled" type="submit" [disabled]="saving()">
+      {{ 'common.save' | translate }}
+    </button>
+  </mat-dialog-actions>
+</form>

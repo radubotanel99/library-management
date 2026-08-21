@@ -59,17 +59,35 @@ Frontend: `CategoryService`, list screen with Material table, create/edit dialog
 
 ## Phase 3 — Books
 
-**Goal:** the catalogue, including removal and restore.
+**Goal:** the catalogue, including removal and restore. Split into three sub-phases so each lands something runnable before the next starts (ground rule 1) — this phase has the most moving parts of any single slice so far.
 
-Backend: paged list with `search` + `categoryId`; `by-number` lookup; `/archived`; `POST /{id}/remove` and `POST /{id}/restore`; `BookStatus` enum; `onLoan` and `categoryName` on the response.
+### Phase 3a — Active catalogue (CRUD + search)
 
-Key rules: `PUT` never changes status · removal requires a reason and is blocked by an open loan · restore is explicit and returns `BOOK_NUMBER_TAKEN_ON_RESTORE` when the number was reused.
+Backend: `Book` entity/repository/service/controller; `BookRequest`/`BookResponse` DTOs; `POST /api/books`, `PUT /api/books/{id}`, `GET /api/books/{id}`; paged `GET /api/books` with `search` (title/author/number) + `categoryId`; `GET /api/books/by-number/{bookNumber}`; `categoryName` denormalised onto the response; `BOOK_NUMBER_ALREADY_EXISTS`, `BOOK_NOT_FOUND`.
 
-Frontend: catalogue table with search and category filter; create/edit dialog; **remove dialog with reason dropdown + optional note**; archive screen filterable by reason with a Restore action; on `BOOK_NUMBER_TAKEN_ON_RESTORE`, prompt for a new number.
+`onLoan` also ships now even though Phase 5 (Loans) doesn't exist yet: a repository query against the `loan` table for an open (`ACTIVE`/`LATE`) row on that book id. The `loan` table already exists from Phase 1 — this is a query, not a new feature, so it isn't scope invention.
+
+Frontend: `BookService`; catalogue table with search box and category filter; create/edit dialog.
 
 > Any screen showing `bookNumber` must also show title and author — numbers are only unique among active books.
 
-**Done when:** a book can be added, removed with a reason, seen on the archive screen, and restored — including the number-collision path.
+**Done when:** a book can be created, edited, listed, searched, and filtered by category in the browser.
+
+### Phase 3b — Removal
+
+Backend: `BookStatus` enum (`ACTIVE`/`LOST`/`DAMAGED`/`WITHDRAWN`); `POST /api/books/{id}/remove` with `BookRemoveRequest`; blocked by an open loan (`BOOK_HAS_OPEN_LOAN`); confirm `PUT` still never changes `status`.
+
+Frontend: remove dialog with reason dropdown + optional note.
+
+**Done when:** a book can be removed with a mandatory reason and immediately disappears from the active catalogue.
+
+### Phase 3c — Archive & restore
+
+Backend: `GET /api/books/archived` (everything not `ACTIVE`, same query params as the active list); `POST /api/books/{id}/restore`; `BOOK_NOT_REMOVED`, `BOOK_NUMBER_TAKEN_ON_RESTORE`.
+
+Frontend: archive screen filterable by reason with a Restore action; on `BOOK_NUMBER_TAKEN_ON_RESTORE`, prompt for a new number and retry via `PUT` then `POST /restore`.
+
+**Done when:** a removed book is visible on the archive screen and can be restored — including the number-collision path.
 
 ---
 
@@ -118,6 +136,21 @@ Backend: a single `GET /api/dashboard` with efficient aggregate queries — coun
 Frontend: stat cards plus a most-borrowed list, replacing the empty landing page.
 
 **Done when:** the home screen shows live figures that change as books are lent and returned.
+
+---
+
+## Phase 7b — Design
+
+**Goal:** one consistent look across every screen built so far, before the app is packaged for deployment. No new endpoints or business logic — this phase only touches the frontend.
+
+- Pick one Angular Material theme (palette + typography) applied globally; remove any per-screen default-theme leftovers.
+- Pass over every screen from Phases 2–7 (categories, books, archive, members, loans, settings, dashboard) for consistent spacing, table density, and button placement.
+- Add empty, loading, and error states wherever a table or form can be in one of those states and currently isn't handled.
+- Check responsive layout at common desk/tablet widths — librarians may use this from a tablet at the front desk.
+- Confirm a shared navigation shell (toolbar/sidenav) links every screen, replacing any ad-hoc per-page links.
+- Re-audit for hardcoded strings that slipped in while screens were built quickly — everything still routes through i18n keys, EN and RO both checked.
+
+**Done when:** every screen shares one Material theme, handles empty/loading/error states, is usable at tablet width, and no hardcoded strings remain in either language.
 
 ---
 

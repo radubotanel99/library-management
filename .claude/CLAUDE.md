@@ -11,10 +11,10 @@ Replaces an older Java/Hibernate/Tomcat system currently in production at two li
 
 | File | Contains |
 |---|---|
-| `docs/FUNCTIONAL_SPEC.md` | What the system does, in plain language |
-| `docs/DATA_MODEL.md` | Schema: tables, columns, constraints, and the reasoning behind them |
-| `docs/API_CONTRACT.md` | Every endpoint: paths, payloads, error codes |
-| `docs/BUILD_PLAN.md` | Phased build order and what is out of scope |
+| `.claude/docs/FUNCTIONAL_SPEC.md` | What the system does, in plain language |
+| `.claude/docs/DATA_MODEL.md` | Schema: tables, columns, constraints, and the reasoning behind them |
+| `.claude/docs/API_CONTRACT.md` | Every endpoint: paths, payloads, error codes |
+| `.claude/docs/BUILD_PLAN.md` | Phased build order and what is out of scope |
 
 **Read `API_CONTRACT.md` before touching any endpoint, and `DATA_MODEL.md` before touching the schema.**
 These files carry the reasoning for decisions that look wrong out of context — do not "fix" them without asking.
@@ -24,9 +24,9 @@ These files carry the reasoning for decisions that look wrong out of context —
 ## Layout
 
 ```
-/backend     Spring Boot (Maven)
-/frontend    Angular
-/docs        The four documents above
+/backend       Spring Boot (Maven)
+/frontend      Angular
+/.claude/docs  The four documents above
 compose.dev.yaml    Dev database only
 compose.yaml        Production: app + database
 ```

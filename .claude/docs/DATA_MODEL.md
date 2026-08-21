@@ -82,7 +82,7 @@ CREATE UNIQUE INDEX ux_category_name_active
 | `id` | `BIGSERIAL` | PK | Internal surrogate key |
 | `title` | `VARCHAR(255)` | NOT NULL | |
 | `author` | `VARCHAR(255)` | NOT NULL | |
-| `book_number` | `INTEGER` | NOT NULL, **globally unique** | The number physically written on the copy |
+| `book_number` | `INTEGER` | NOT NULL, **unique among active books only** | The number physically written on the copy |
 | `category_id` | `BIGINT` | NOT NULL, FK → `category(id)` | |
 | `publisher` | `VARCHAR(255)` | NULL | |
 | `price` | `NUMERIC(10,2)` | NULL | |
