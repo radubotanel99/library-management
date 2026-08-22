@@ -50,6 +50,20 @@ export interface BookRequest {
   price?: number | null;
 }
 
+/**
+ * Why a copy is being removed. `ACTIVE` is excluded on purpose: removal always
+ * records a reason, and restoring is its own endpoint (`API_CONTRACT.md` §5).
+ */
+export type RemovalReason = Exclude<BookStatus, 'ACTIVE'>;
+
+/** Payload for `POST /api/books/{id}/remove`. */
+export interface BookRemoveRequest {
+  /** Required. Named `status` because that is the wire field. */
+  status: RemovalReason;
+  /** Optional, max 500. */
+  removalNote?: string | null;
+}
+
 /** Query parameters for `GET /api/books`; every one is optional. */
 export interface BookSearchCriteria {
   /** Case-insensitive match on title or author, or an exact book number. */

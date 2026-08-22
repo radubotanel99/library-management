@@ -1,0 +1,52 @@
+<h2 mat-dialog-title>{{ 'book.remove.title' | translate }}</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <mat-dialog-content>
+    <!--
+      Title and author travel with the number on purpose: a book number is unique
+      only among ACTIVE copies, so it does not identify a book on its own
+      (`DATA_MODEL.md` §4).
+    -->
+    <p class="prompt">
+      {{
+        'book.remove.message'
+          | translate: { title: book.title, author: book.author, bookNumber: book.bookNumber }
+      }}
+    </p>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'book.remove.reason' | translate }}</mat-label>
+      <mat-select formControlName="status">
+        @for (reason of reasons; track reason) {
+          <mat-option [value]="reason">{{ reasonLabelKey(reason) | translate }}</mat-option>
+        }
+      </mat-select>
+      @if (form.controls.status.hasError('required')) {
+        <mat-error>{{ 'validation.required' | translate }}</mat-error>
+      } @else if (form.controls.status.hasError('server')) {
+        <mat-error>{{ 'validation.server' | translate }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'book.remove.note' | translate }}</mat-label>
+      <textarea matInput formControlName="removalNote" rows="3"></textarea>
+      @if (form.controls.removalNote.hasError('maxlength')) {
+        <mat-error>
+          {{ 'validation.maxLength' | translate: { max: removalNoteMaxLength } }}
+        </mat-error>
+      } @else if (form.controls.removalNote.hasError('server')) {
+        <mat-error>{{ 'validation.server' | translate }}</mat-error>
+      }
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton type="button" mat-dialog-close [disabled]="saving()">
+      {{ 'common.cancel' | translate }}
+    </button>
+    <button matButton="filled" type="submit" [disabled]="saving()">
+      {{ 'common.remove' | translate }}
+    </button>
+  </mat-dialog-actions>
+</form>

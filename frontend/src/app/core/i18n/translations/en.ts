@@ -14,6 +14,7 @@ export const en = {
   'common.actions': 'Actions',
   'common.edit': 'Edit',
   'common.delete': 'Delete',
+  'common.remove': 'Remove',
   'common.cancel': 'Cancel',
   'common.save': 'Save',
   'common.retry': 'Retry',
@@ -62,6 +63,15 @@ export const en = {
   'book.form.categoryId': 'Category',
   'book.form.publisher': 'Publisher',
   'book.form.price': 'Price',
+  'book.remove.title': 'Remove book',
+  'book.remove.message':
+    'Remove "{{title}}" by {{author}} (no. {{bookNumber}}) from the collection? Give the reason below.',
+  'book.remove.reason': 'Reason',
+  'book.remove.note': 'Note',
+  'book.remove.blocked': 'A book that is on loan cannot be removed.',
+  'book.status.LOST': 'Lost',
+  'book.status.DAMAGED': 'Damaged',
+  'book.status.WITHDRAWN': 'Withdrawn',
 
   'validation.required': 'This field is required.',
   'validation.maxLength': 'Use at most {{max}} characters.',
@@ -70,6 +80,7 @@ export const en = {
 
   'error.BOOK_NUMBER_ALREADY_EXISTS': 'An active book already uses this number.',
   'error.BOOK_NOT_FOUND': 'This book no longer exists.',
+  'error.BOOK_HAS_OPEN_LOAN': 'This book is on loan and cannot be removed until it is returned.',
   'error.CATEGORY_NAME_ALREADY_EXISTS': 'A category with this name already exists.',
   'error.CATEGORY_HAS_BOOKS': 'This category still has books and cannot be deleted.',
   'error.CATEGORY_NOT_FOUND': 'This category no longer exists.',

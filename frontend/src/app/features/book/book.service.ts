@@ -3,7 +3,7 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { PagedResponse } from '../../core/http/paged-response';
 import { environment } from '../../../environments/environment';
-import { BookRequest, BookResponse, BookSearchCriteria } from './book.model';
+import { BookRemoveRequest, BookRequest, BookResponse, BookSearchCriteria } from './book.model';
 
 /**
  * The only place in the book feature that touches `HttpClient`.
@@ -57,5 +57,13 @@ export class BookService {
 
   update(id: number, request: BookRequest): Observable<BookResponse> {
     return this.http.put<BookResponse>(`${this.baseUrl}/${id}`, request);
+  }
+
+  /**
+   * Takes a copy out of the collection. A `POST` to a sub-resource rather than a
+   * `DELETE`: the reason is mandatory and `DELETE` has no body semantics for it.
+   */
+  remove(id: number, request: BookRemoveRequest): Observable<BookResponse> {
+    return this.http.post<BookResponse>(`${this.baseUrl}/${id}/remove`, request);
   }
 }

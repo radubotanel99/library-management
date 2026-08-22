@@ -1,5 +1,6 @@
 package com.library.management.backend.book;
 
+import com.library.management.backend.book.dto.BookRemoveRequest;
 import com.library.management.backend.book.dto.BookRequest;
 import com.library.management.backend.book.dto.BookResponse;
 import com.library.management.backend.category.Category;
@@ -137,6 +138,37 @@ public class BookService {
         apply(book, request, category);
 
         return BookMapper.toResponse(save(book), isOnLoan(id));
+    }
+
+    /**
+     * Takes a copy out of the collection, recording <em>why</em>
+     * ({@code API_CONTRACT.md} §5).
+     *
+     * <p>A copy that is already removed is reported as missing, exactly as
+     * {@link #update} does -- there is nothing to remove, and a 409 would imply the
+     * caller could retry differently. A copy that is still out on loan is a genuine
+     * rule violation and gets {@link ErrorCode#BOOK_HAS_OPEN_LOAN}.
+     *
+     * <p>Removing frees the copy's number for reuse but never claims one, so this
+     * saves directly rather than through {@link #save}: there is no duplicate-number
+     * collision to map.
+     */
+    @Transactional
+    public BookResponse remove(Long id, BookRemoveRequest request) {
+        Book book = requireActive(id);
+
+        if (isOnLoan(id)) {
+            // No field: the payload is fine, the copy's situation is not.
+            throw new ApiException(ErrorCode.BOOK_HAS_OPEN_LOAN);
+        }
+
+        book.setStatus(request.status().toBookStatus());
+        book.setRemovalNote(normalise(request.removalNote()));
+
+        Book saved = bookRepository.saveAndFlush(book);
+
+        // The check above just proved the copy is not out, so no second query.
+        return BookMapper.toResponse(saved, false);
     }
 
     private void apply(Book book, BookRequest request, Category category) {

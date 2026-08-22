@@ -125,6 +125,17 @@
         >
           <mat-icon>edit</mat-icon>
         </button>
+        <!-- Wrapper span: a disabled button does not emit the events MatTooltip needs. -->
+        <span [matTooltip]="(book.onLoan ? 'book.remove.blocked' : 'common.remove') | translate">
+          <button
+            matIconButton
+            [disabled]="book.onLoan"
+            [attr.aria-label]="'common.remove' | translate"
+            (click)="openRemoveDialog(book)"
+          >
+            <mat-icon>archive</mat-icon>
+          </button>
+        </span>
       </td>
     </ng-container>
 

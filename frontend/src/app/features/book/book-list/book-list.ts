@@ -19,6 +19,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { CategoryResponse } from '../../category/category.model';
 import { CategoryService } from '../../category/category.service';
 import { BookFormDialog, BookFormDialogData } from '../book-form-dialog/book-form-dialog';
+import { BookRemoveDialog, BookRemoveDialogData } from '../book-remove-dialog/book-remove-dialog';
 import { BookResponse, BookSearchCriteria } from '../book.model';
 import { BookService } from '../book.service';
 
@@ -174,6 +175,24 @@ export class BookList implements OnInit {
 
   protected openEditDialog(book: BookResponse): void {
     this.openFormDialog(book);
+  }
+
+  /**
+   * The button is disabled for a copy that is out, so this normally only opens for
+   * a removable one; the server's `BOOK_HAS_OPEN_LOAN` covers the stale-list race.
+   */
+  protected openRemoveDialog(book: BookResponse): void {
+    this.dialog
+      .open<BookRemoveDialog, BookRemoveDialogData, BookResponse>(BookRemoveDialog, { data: book })
+      .afterClosed()
+      .subscribe((removed) => {
+        if (removed) {
+          // Re-fetch rather than drop the row locally: the catalogue is filtered
+          // server-side to ACTIVE copies, and that filter is what makes the row
+          // disappear — and the following page shift up — correctly.
+          this.retry();
+        }
+      });
   }
 
   private openFormDialog(book: BookFormDialogData): void {

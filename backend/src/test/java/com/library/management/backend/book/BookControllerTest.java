@@ -15,6 +15,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import com.library.management.backend.book.dto.BookRemoveRequest;
 import com.library.management.backend.book.dto.BookRequest;
 import com.library.management.backend.book.dto.BookResponse;
 import com.library.management.backend.common.dto.PagedResponse;
@@ -63,6 +64,25 @@ class BookControllerTest {
             true,
             Instant.parse("2026-01-12T10:00:00Z"),
             null);
+
+    private static final String REMOVE_JSON = """
+            {"status":"LOST","removalNote":"Not returned by member"}
+            """;
+
+    private static final BookResponse REMOVED = new BookResponse(
+            41L,
+            "Amintiri din copilărie",
+            "Ion Creangă",
+            1201,
+            3L,
+            "Fiction",
+            "Humanitas",
+            new BigDecimal("29.90"),
+            BookStatus.LOST,
+            "Not returned by member",
+            false,
+            Instant.parse("2026-01-12T10:00:00Z"),
+            Instant.parse("2026-08-21T09:00:00Z"));
 
     @Autowired
     private MockMvc mockMvc;
@@ -279,6 +299,99 @@ class BookControllerTest {
         mockMvc.perform(put("/api/books/41")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(BOOK_JSON))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("BOOK_NOT_FOUND"));
+    }
+
+    @Test
+    void removeReturns200WithTheArchivedBook() throws Exception {
+        when(bookService.remove(eq(41L), any(BookRemoveRequest.class))).thenReturn(REMOVED);
+
+        mockMvc.perform(post("/api/books/41/remove")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(REMOVE_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(41))
+                .andExpect(jsonPath("$.status").value("LOST"))
+                .andExpect(jsonPath("$.removalNote").value("Not returned by member"))
+                .andExpect(jsonPath("$.onLoan").value(false))
+                // The number is unique only among active copies, so it never
+                // travels without title and author (DATA_MODEL.md §4).
+                .andExpect(jsonPath("$.bookNumber").value(1201))
+                .andExpect(jsonPath("$.title").value("Amintiri din copilărie"))
+                .andExpect(jsonPath("$.author").value("Ion Creangă"));
+
+        ArgumentCaptor<BookRemoveRequest> request = ArgumentCaptor.forClass(BookRemoveRequest.class);
+        verify(bookService).remove(eq(41L), request.capture());
+        assertThat(request.getValue().status()).isEqualTo(RemovalReason.LOST);
+        assertThat(request.getValue().removalNote()).isEqualTo("Not returned by member");
+    }
+
+    @Test
+    void removeReturns409ForACopyThatIsStillOnLoan() throws Exception {
+        when(bookService.remove(eq(41L), any(BookRemoveRequest.class)))
+                .thenThrow(new ApiException(ErrorCode.BOOK_HAS_OPEN_LOAN));
+
+        mockMvc.perform(post("/api/books/41/remove")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(REMOVE_JSON))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("BOOK_HAS_OPEN_LOAN"))
+                .andExpect(jsonPath("$.field").isEmpty());
+    }
+
+    @Test
+    void removeRejectsActiveAsAReason() throws Exception {
+        // ACTIVE is not a constant of RemovalReason, so this dies in the JSON
+        // parser and never reaches the service -- no custom validator needed.
+        mockMvc.perform(post("/api/books/41/remove")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"status":"ACTIVE","removalNote":null}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.field").isEmpty());
+
+        verify(bookService, never()).remove(any(), any());
+    }
+
+    @Test
+    void removeRejectsAMissingReason() throws Exception {
+        mockMvc.perform(post("/api/books/41/remove")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {"status":null,"removalNote":"Worn out"}
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.field").value("status"));
+
+        verify(bookService, never()).remove(any(), any());
+    }
+
+    @Test
+    void removeRejectsANoteLongerThanTheColumn() throws Exception {
+        String tooLong = "x".repeat(501);
+
+        mockMvc.perform(post("/api/books/41/remove")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"status\":\"DAMAGED\",\"removalNote\":\"" + tooLong + "\"}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.field").value("removalNote"));
+
+        verify(bookService, never()).remove(any(), any());
+    }
+
+    @Test
+    void removeReturns404ForAnUnknownCopy() throws Exception {
+        when(bookService.remove(eq(99L), any(BookRemoveRequest.class)))
+                .thenThrow(new ApiException(ErrorCode.BOOK_NOT_FOUND));
+
+        mockMvc.perform(post("/api/books/99/remove")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(REMOVE_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("BOOK_NOT_FOUND"));
     }

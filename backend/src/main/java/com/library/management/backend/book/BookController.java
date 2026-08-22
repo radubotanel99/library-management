@@ -1,5 +1,6 @@
 package com.library.management.backend.book;
 
+import com.library.management.backend.book.dto.BookRemoveRequest;
 import com.library.management.backend.book.dto.BookRequest;
 import com.library.management.backend.book.dto.BookResponse;
 import com.library.management.backend.common.dto.PagedResponse;
@@ -71,5 +72,15 @@ public class BookController {
     @PutMapping("/{id}")
     public BookResponse update(@PathVariable Long id, @Valid @RequestBody BookRequest request) {
         return bookService.update(id, request);
+    }
+
+    /**
+     * Takes a copy out of the collection. A {@code POST} to a sub-resource rather
+     * than a {@code DELETE} because the reason is mandatory and {@code DELETE} has
+     * no body semantics for it.
+     */
+    @PostMapping("/{id}/remove")
+    public BookResponse remove(@PathVariable Long id, @Valid @RequestBody BookRemoveRequest request) {
+        return bookService.remove(id, request);
     }
 }

@@ -1,0 +1,10 @@
+mat-dialog-content {
+  display: flex;
+  flex-direction: column;
+  padding-top: 0.5rem;
+  min-width: 22rem;
+}
+
+.prompt {
+  margin: 0 0 1rem;
+}

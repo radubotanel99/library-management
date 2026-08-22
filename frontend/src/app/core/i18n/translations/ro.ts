@@ -16,6 +16,7 @@ export const ro: Record<TranslationKey, string> = {
   'common.actions': 'Acțiuni',
   'common.edit': 'Modifică',
   'common.delete': 'Șterge',
+  'common.remove': 'Scoate din colecție',
   'common.cancel': 'Anulează',
   'common.save': 'Salvează',
   'common.retry': 'Reîncearcă',
@@ -64,6 +65,15 @@ export const ro: Record<TranslationKey, string> = {
   'book.form.categoryId': 'Categorie',
   'book.form.publisher': 'Editură',
   'book.form.price': 'Preț',
+  'book.remove.title': 'Scoate cartea din colecție',
+  'book.remove.message':
+    'Scoți din colecție „{{title}}” de {{author}} (nr. {{bookNumber}})? Indică mai jos motivul.',
+  'book.remove.reason': 'Motiv',
+  'book.remove.note': 'Observații',
+  'book.remove.blocked': 'O carte împrumutată nu poate fi scoasă din colecție.',
+  'book.status.LOST': 'Pierdută',
+  'book.status.DAMAGED': 'Deteriorată',
+  'book.status.WITHDRAWN': 'Retrasă',
 
   'validation.required': 'Acest câmp este obligatoriu.',
   'validation.maxLength': 'Folosește cel mult {{max}} caractere.',
@@ -72,6 +82,8 @@ export const ro: Record<TranslationKey, string> = {
 
   'error.BOOK_NUMBER_ALREADY_EXISTS': 'Există deja o carte activă cu acest număr.',
   'error.BOOK_NOT_FOUND': 'Această carte nu mai există.',
+  'error.BOOK_HAS_OPEN_LOAN':
+    'Cartea este împrumutată și nu poate fi scoasă din colecție până nu este returnată.',
   'error.CATEGORY_NAME_ALREADY_EXISTS': 'Există deja o categorie cu acest nume.',
   'error.CATEGORY_HAS_BOOKS': 'Categoria are cărți asociate și nu poate fi ștearsă.',
   'error.CATEGORY_NOT_FOUND': 'Această categorie nu mai există.',

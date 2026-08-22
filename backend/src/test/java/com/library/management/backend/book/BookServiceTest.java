@@ -11,6 +11,7 @@ import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 
+import com.library.management.backend.book.dto.BookRemoveRequest;
 import com.library.management.backend.book.dto.BookRequest;
 import com.library.management.backend.book.dto.BookResponse;
 import com.library.management.backend.category.Category;
@@ -27,6 +28,8 @@ import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -307,6 +310,111 @@ class BookServiceTest {
                     .isInstanceOf(ApiException.class)
                     .extracting(ex -> ((ApiException) ex).getErrorCode())
                     .isEqualTo(ErrorCode.BOOK_NUMBER_ALREADY_EXISTS);
+        }
+    }
+
+    @Nested
+    @DisplayName("remove")
+    class Remove {
+
+        private static final BookRemoveRequest LOST_REQUEST =
+                new BookRemoveRequest(RemovalReason.LOST, "Not returned by member, written off");
+
+        private void stubActiveCopyNotOnLoan(Book book) {
+            when(bookRepository.findById(book.getId())).thenReturn(Optional.of(book));
+            when(loanRepository.existsByBookIdAndStateIn(book.getId(), LoanRepository.OPEN_STATES))
+                    .thenReturn(false);
+        }
+
+        @Test
+        void recordsTheReasonAndTheNote() {
+            Book existing = book(41L, 1201, BookStatus.ACTIVE);
+            stubActiveCopyNotOnLoan(existing);
+            when(bookRepository.saveAndFlush(existing)).thenReturn(existing);
+
+            BookResponse result = bookService.remove(41L, LOST_REQUEST);
+
+            assertThat(existing.getStatus()).isEqualTo(BookStatus.LOST);
+            assertThat(existing.getRemovalNote()).isEqualTo("Not returned by member, written off");
+            assertThat(result.status()).isEqualTo(BookStatus.LOST);
+            assertThat(result.removalNote()).isEqualTo("Not returned by member, written off");
+            // The rule check above already proved the copy is not out.
+            assertThat(result.onLoan()).isFalse();
+        }
+
+        @Test
+        void storesABlankNoteAsNull() {
+            Book existing = book(41L, 1201, BookStatus.ACTIVE);
+            stubActiveCopyNotOnLoan(existing);
+            when(bookRepository.saveAndFlush(existing)).thenReturn(existing);
+
+            bookService.remove(41L, new BookRemoveRequest(RemovalReason.DAMAGED, "   "));
+
+            assertThat(existing.getRemovalNote()).isNull();
+        }
+
+        @ParameterizedTest
+        @EnumSource(RemovalReason.class)
+        void mapsEveryReasonOntoItsMatchingStatus(RemovalReason reason) {
+            Book existing = book(41L, 1201, BookStatus.ACTIVE);
+            stubActiveCopyNotOnLoan(existing);
+            when(bookRepository.saveAndFlush(existing)).thenReturn(existing);
+
+            bookService.remove(41L, new BookRemoveRequest(reason, null));
+
+            assertThat(existing.getStatus()).isEqualTo(BookStatus.valueOf(reason.name()));
+            assertThat(existing.getStatus()).isNotEqualTo(BookStatus.ACTIVE);
+        }
+
+        @Test
+        void refusesToRemoveACopyThatIsStillOnLoan() {
+            Book existing = book(41L, 1201, BookStatus.ACTIVE);
+            when(bookRepository.findById(41L)).thenReturn(Optional.of(existing));
+            when(loanRepository.existsByBookIdAndStateIn(41L, LoanRepository.OPEN_STATES))
+                    .thenReturn(true);
+
+            assertThatThrownBy(() -> bookService.remove(41L, LOST_REQUEST))
+                    .isInstanceOf(ApiException.class)
+                    .satisfies(thrown -> {
+                        ApiException ex = (ApiException) thrown;
+                        assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.BOOK_HAS_OPEN_LOAN);
+                        // The payload is fine; the copy's situation is not.
+                        assertThat(ex.getField()).isNull();
+                    });
+
+            verify(bookRepository, never()).saveAndFlush(any());
+            assertThat(existing.getStatus()).isEqualTo(BookStatus.ACTIVE);
+            assertThat(existing.getRemovalNote()).isNull();
+        }
+
+        @Test
+        void throwsNotFoundWhenTheCopyDoesNotExist() {
+            when(bookRepository.findById(99L)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> bookService.remove(99L, LOST_REQUEST))
+                    .isInstanceOf(ApiException.class)
+                    .extracting(ex -> ((ApiException) ex).getErrorCode())
+                    .isEqualTo(ErrorCode.BOOK_NOT_FOUND);
+
+            verify(bookRepository, never()).saveAndFlush(any());
+        }
+
+        @Test
+        void throwsNotFoundForACopyThatIsAlreadyRemoved() {
+            // Not a conflict: an archived copy is simply not addressable here, the
+            // same way update refuses to edit one.
+            Book archived = book(41L, 1201, BookStatus.WITHDRAWN);
+            archived.setRemovalNote("Superseded edition");
+            when(bookRepository.findById(41L)).thenReturn(Optional.of(archived));
+
+            assertThatThrownBy(() -> bookService.remove(41L, LOST_REQUEST))
+                    .isInstanceOf(ApiException.class)
+                    .extracting(ex -> ((ApiException) ex).getErrorCode())
+                    .isEqualTo(ErrorCode.BOOK_NOT_FOUND);
+
+            verify(bookRepository, never()).saveAndFlush(any());
+            assertThat(archived.getStatus()).isEqualTo(BookStatus.WITHDRAWN);
+            assertThat(archived.getRemovalNote()).isEqualTo("Superseded edition");
         }
     }
 

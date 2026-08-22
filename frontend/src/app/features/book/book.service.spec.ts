@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { PagedResponse } from '../../core/http/paged-response';
 import { environment } from '../../../environments/environment';
-import { BookRequest, BookResponse } from './book.model';
+import { BookRemoveRequest, BookRequest, BookResponse } from './book.model';
 import { BookService } from './book.service';
 
 const BOOKS_URL = `${environment.apiBaseUrl}/books`;
@@ -148,5 +148,24 @@ describe('BookService', () => {
     request.flush({ ...amintiri, bookNumber: 1202 });
 
     expect(result?.bookNumber).toBe(1202);
+  });
+
+  it('removes a book by posting the reason to the remove sub-resource', () => {
+    const payload: BookRemoveRequest = {
+      status: 'LOST',
+      removalNote: 'Not returned by member',
+    };
+    let result: BookResponse | undefined;
+    service.remove(41, payload).subscribe((book) => (result = book));
+
+    // A POST to /{id}/remove, not a DELETE: the reason is mandatory and DELETE
+    // has no body semantics for it (`API_CONTRACT.md` §5).
+    const request = http.expectOne(`${BOOKS_URL}/41/remove`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(payload);
+    request.flush({ ...amintiri, status: 'LOST', removalNote: payload.removalNote, onLoan: false });
+
+    expect(result?.status).toBe('LOST');
+    expect(result?.removalNote).toBe('Not returned by member');
   });
 });
