@@ -1,0 +1,172 @@
+<header class="header">
+  <h1>{{ 'loan.list.title' | translate }}</h1>
+  <button matButton="filled" (click)="openLendDialog()">
+    <mat-icon>add</mat-icon>
+    {{ 'loan.list.add' | translate }}
+  </button>
+</header>
+
+<div class="filters">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>{{ 'loan.list.search' | translate }}</mat-label>
+    <input matInput [value]="criteria().search ?? ''" (input)="onSearchInput($event)" />
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <!--
+    No "all" option: the contract's four values are the useful views, and OPEN
+    (active + late) is the one a librarian works in (`API_CONTRACT.md` §8).
+  -->
+  <mat-form-field appearance="outline" class="state-field">
+    <mat-label>{{ 'loan.list.state' | translate }}</mat-label>
+    <mat-select
+      [value]="criteria().state ?? 'OPEN'"
+      (selectionChange)="onStateChange($event.value)"
+    >
+      @for (state of stateFilters; track state) {
+        <mat-option [value]="state">{{ stateLabelKey(state) | translate }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+</div>
+
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (loadFailed()) {
+  <div class="placeholder">
+    <p>{{ 'loan.list.loadError' | translate }}</p>
+    <button matButton (click)="retry()">{{ 'common.retry' | translate }}</button>
+  </div>
+} @else if (!loading() && loans().length === 0) {
+  <div class="placeholder">
+    <p>{{ 'loan.list.empty' | translate }}</p>
+  </div>
+} @else {
+  <table
+    mat-table
+    [dataSource]="loans()"
+    matSort
+    [matSortActive]="sortActive()"
+    [matSortDirection]="sortDirection()"
+    matSortDisableClear
+    (matSortChange)="onSortChange($event)"
+  >
+    <!--
+      Title, author and number stay together: a book number is unique only among
+      ACTIVE copies, so a removed copy frees it for reuse (`DATA_MODEL.md` §4)
+      and the number alone does not identify a book to a human. Not sortable —
+      the backend does not sort across the join.
+    -->
+    <ng-container matColumnDef="book">
+      <th mat-header-cell *matHeaderCellDef>{{ 'loan.column.book' | translate }}</th>
+      <td mat-cell *matCellDef="let loan">
+        {{
+          'loan.book'
+            | translate
+              : { title: loan.bookTitle, author: loan.bookAuthor, bookNumber: loan.bookNumber }
+        }}
+      </td>
+    </ng-container>
+
+    <!-- Not sortable: a joined column the server cannot order by. -->
+    <ng-container matColumnDef="member">
+      <th mat-header-cell *matHeaderCellDef>{{ 'loan.column.member' | translate }}</th>
+      <td mat-cell *matCellDef="let loan">{{ loan.memberName }}</td>
+    </ng-container>
+
+    <!--
+      Not sortable: the backend refuses to order by the stored `state` column,
+      because it can visibly disagree with the derived value shown here.
+    -->
+    <ng-container matColumnDef="state">
+      <th mat-header-cell *matHeaderCellDef>
+        {{ 'loan.column.state' | translate }}
+      </th>
+      <td mat-cell *matCellDef="let loan">{{ stateLabelKey(loan.state) | translate }}</td>
+    </ng-container>
+
+    <!--
+      Sorted as `createdAt`: the borrow date *is* the loan's creation timestamp,
+      and that is the column the backend orders by.
+    -->
+    <ng-container matColumnDef="borrowedAt">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header="createdAt">
+        {{ 'loan.column.borrowedAt' | translate }}
+      </th>
+      <td mat-cell *matCellDef="let loan">{{ loan.borrowedAt | date: dateFormat }}</td>
+    </ng-container>
+
+    <!--
+      Not sortable, and never computed here: `dueAt` is derived server-side from
+      `borrowedAt + DAYS_TO_KEEP_A_BOOK` and has no column to sort on
+      (`DATA_MODEL.md` §6).
+    -->
+    <ng-container matColumnDef="dueAt">
+      <th mat-header-cell *matHeaderCellDef>{{ 'loan.column.dueAt' | translate }}</th>
+      <td mat-cell *matCellDef="let loan">{{ loan.dueAt | date: dateFormat }}</td>
+    </ng-container>
+
+    <!--
+      Displayed exactly as the server sends it, already clamped to [1, 365]
+      (`API_CONTRACT.md` §8). Deriving it from the browser clock would mislead
+      whenever that clock is wrong.
+    -->
+    <ng-container matColumnDef="daysOverdue">
+      <th mat-header-cell *matHeaderCellDef>{{ 'loan.column.daysOverdue' | translate }}</th>
+      <td mat-cell *matCellDef="let loan" class="numeric-cell">
+        {{ loan.daysOverdue > 0 ? loan.daysOverdue : ('common.notSet' | translate) }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="finishedAt">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>
+        {{ 'loan.column.finishedAt' | translate }}
+      </th>
+      <td mat-cell *matCellDef="let loan">
+        {{ loan.finishedAt ? (loan.finishedAt | date: dateFormat) : ('common.notSet' | translate) }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
+      <td mat-cell *matCellDef="let loan" class="actions-cell">
+        <!-- A finished loan has nothing to return, so the action is not offered. -->
+        @if (isOpen(loan.state)) {
+          <button
+            matIconButton
+            [attr.aria-label]="'loan.return.action' | translate"
+            [matTooltip]="'loan.return.action' | translate"
+            (click)="confirmReturn(loan)"
+          >
+            <mat-icon>assignment_return</mat-icon>
+          </button>
+        }
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <!--
+      The emphasis follows the server's `state` alone. The frontend never decides
+      what is late: the backend re-evaluates it against DAYS_TO_KEEP_A_BOOK
+      (`API_CONTRACT.md` §11), and a wrong client clock must not colour a row.
+    -->
+    <tr
+      mat-row
+      *matRowDef="let row; columns: displayedColumns"
+      [class.overdue-row]="row.state === 'LATE'"
+    ></tr>
+  </table>
+}
+
+<!-- Outside the @else so the page controls survive an empty result set. -->
+@if (!loadFailed()) {
+  <mat-paginator
+    [length]="totalElements()"
+    [pageIndex]="criteria().page ?? 0"
+    [pageSize]="criteria().size ?? 20"
+    [pageSizeOptions]="[10, 20, 50, 100]"
+    (page)="onPageChange($event)"
+  />
+}

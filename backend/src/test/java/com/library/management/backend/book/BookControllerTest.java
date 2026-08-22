@@ -456,13 +456,15 @@ class BookControllerTest {
     void restoreReturns200WithTheReactivatedBookAndNoBodyRequired() throws Exception {
         when(bookService.restore(eq(41L), any())).thenReturn(RESTORED);
 
-        mockMvc.perform(post("/api/books/41/restore"))
+        mockMvc.perform(post("/api/books/41/restore")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(41))
                 .andExpect(jsonPath("$.status").value("ACTIVE"))
                 .andExpect(jsonPath("$.removalNote").isEmpty());
 
-        verify(bookService).restore(eq(41L), eq(null));
+        verify(bookService).restore(eq(41L), eq(new BookRestoreRequest(null)));
     }
 
     @Test
@@ -484,7 +486,9 @@ class BookControllerTest {
         when(bookService.restore(eq(41L), any()))
                 .thenThrow(new ApiException(ErrorCode.BOOK_NOT_REMOVED));
 
-        mockMvc.perform(post("/api/books/41/restore"))
+        mockMvc.perform(post("/api/books/41/restore")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("BOOK_NOT_REMOVED"));
     }
@@ -494,7 +498,9 @@ class BookControllerTest {
         when(bookService.restore(eq(41L), any()))
                 .thenThrow(new ApiException(ErrorCode.BOOK_NUMBER_TAKEN_ON_RESTORE, "bookNumber"));
 
-        mockMvc.perform(post("/api/books/41/restore"))
+        mockMvc.perform(post("/api/books/41/restore")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("BOOK_NUMBER_TAKEN_ON_RESTORE"))
                 .andExpect(jsonPath("$.field").value("bookNumber"));
@@ -505,7 +511,9 @@ class BookControllerTest {
         when(bookService.restore(eq(41L), any()))
                 .thenThrow(new ApiException(ErrorCode.CATEGORY_NOT_FOUND));
 
-        mockMvc.perform(post("/api/books/41/restore"))
+        mockMvc.perform(post("/api/books/41/restore")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("CATEGORY_NOT_FOUND"));
     }

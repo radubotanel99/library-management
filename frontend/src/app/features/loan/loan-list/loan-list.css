@@ -1,0 +1,66 @@
+:host {
+  display: block;
+  padding: 1.5rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.header h1 {
+  font: var(--mat-sys-headline-small);
+  margin: 0;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.search-field {
+  flex: 1 1 20rem;
+}
+
+.state-field {
+  flex: 0 1 14rem;
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 3rem 1rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+table {
+  width: 100%;
+}
+
+/*
+  Overdue rows, driven only by the server's `state === 'LATE'`. Deliberately
+  plain: Phase 7b does the design pass, this is just enough for a librarian to
+  spot the late loans at a glance.
+*/
+.overdue-row {
+  background: var(--mat-sys-error-container);
+}
+
+.overdue-row .mat-mdc-cell {
+  color: var(--mat-sys-on-error-container);
+}
+
+.numeric-cell {
+  text-align: end;
+}
+
+.actions-cell {
+  white-space: nowrap;
+  text-align: end;
+}

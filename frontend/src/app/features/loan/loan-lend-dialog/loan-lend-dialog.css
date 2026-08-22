@@ -1,0 +1,10 @@
+mat-dialog-content {
+  display: flex;
+  flex-direction: column;
+  padding-top: 0.5rem;
+  min-width: 26rem;
+}
+
+.option-note {
+  color: var(--mat-sys-on-surface-variant);
+}

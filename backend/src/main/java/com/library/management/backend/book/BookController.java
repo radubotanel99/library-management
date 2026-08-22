@@ -9,6 +9,7 @@ import jakarta.validation.Valid;
 import java.net.URI;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -99,8 +100,16 @@ public class BookController {
      * Puts a copy back into the collection. No body is required; an optional
      * {@code bookNumber} retries after a {@code BOOK_NUMBER_TAKEN_ON_RESTORE}
      * collision without a separate {@code PUT}.
+     *
+     * <p>{@code consumes} is set even though the body is optional: without it, this
+     * near-bodyless {@code POST} is a CORS "simple request" -- no auth exists yet to
+     * block it, so a cross-origin auto-submitting HTML form (urlencoded, no
+     * preflight) could invoke it. Requiring a JSON content type forces a preflight,
+     * which the CORS policy rejects for foreign origins. The frontend already sends
+     * a JSON body (empty object or the retry payload), so this is not a contract
+     * change.
      */
-    @PostMapping("/{id}/restore")
+    @PostMapping(path = "/{id}/restore", consumes = MediaType.APPLICATION_JSON_VALUE)
     public BookResponse restore(@PathVariable Long id,
                                 @Valid @RequestBody(required = false) BookRestoreRequest request) {
         return bookService.restore(id, request);

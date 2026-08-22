@@ -268,10 +268,12 @@ Only **active** categories are addressable: an archived one is `CATEGORY_NOT_FOU
 |---|---|---|---|---|
 | `GET` | `/api/loans` | — | `200` paged | Params: `state`, `memberId`, `bookId`, `search`, `page`, `size`, `sort` |
 | `GET` | `/api/loans/{id}` | — | `200` | `404` |
-| `POST` | `/api/loans` | `LoanRequest` | `201` | `BOOK_ALREADY_ON_LOAN`, `MEMBER_TOO_MANY_LOANS` |
+| `POST` | `/api/loans` | `LoanRequest` | `201` | `BOOK_NOT_FOUND`, `MEMBER_NOT_FOUND`, `BOOK_ALREADY_ON_LOAN`, `MEMBER_TOO_MANY_LOANS` |
 | `POST` | `/api/loans/{id}/return` | — | `200` | `LOAN_ALREADY_FINISHED` |
 
 `state` accepts `ACTIVE`, `LATE`, `FINISHED`, or `OPEN` (a convenience alias for `ACTIVE` + `LATE`).
+
+`search` matches book title, book author, book number (exact), or member name.
 
 ### `LoanResponse`
 
@@ -296,7 +298,7 @@ Book and member details are denormalised so the loans table renders in one reque
 
 **`dueAt` is computed, not stored** — `borrowedAt + DAYS_TO_KEEP_A_BOOK`. It is returned for display only. Because it is derived, changing the parameter re-dates every open loan (see `DATA_MODEL.md` §6).
 
-`daysOverdue` is `0` unless the loan is `LATE`.
+`daysOverdue` is `0` unless the loan is `LATE`, in which case it is clamped to `[1, 365]` — a loan minutes past due still counts as at least 1 day, and an ancient loan does not produce an absurd number.
 
 ### `LoanRequest`
 
@@ -304,7 +306,9 @@ Book and member details are denormalised so the loans table renders in one reque
 { "bookId": 41, "memberId": 12 }
 ```
 
-Both required and must exist. The book must be `ACTIVE` and not on loan; the member must be under `MAX_BOOKS_PER_MEMBER`.
+Both required and must exist. The book must be `ACTIVE` and not on loan (`BOOK_NOT_FOUND` if missing, archived, or otherwise non-`ACTIVE` — an archived copy is treated as not existing, the same rule `PUT`/`GET /api/books/{id}` already apply); the member must not be archived (`MEMBER_NOT_FOUND`) and must be under `MAX_BOOKS_PER_MEMBER`.
+
+The frontend restricts the member field to a picker over active members only — free-text member IDs are never accepted — so `MEMBER_NOT_FOUND` on this endpoint is a defense against a stale picker, not a normal user path.
 
 The borrow date is set server-side — **never** supplied by the client.
 

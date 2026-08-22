@@ -23,5 +23,9 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/member/member-list/member-list').then((m) => m.MemberList),
   },
+  {
+    path: 'loans',
+    loadComponent: () => import('./features/loan/loan-list/loan-list').then((m) => m.LoanList),
+  },
   { path: '**', redirectTo: 'categories' },
 ];

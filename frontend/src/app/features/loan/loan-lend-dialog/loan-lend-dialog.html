@@ -1,0 +1,91 @@
+<h2 mat-dialog-title>{{ 'loan.form.title' | translate }}</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <mat-dialog-content>
+    <!--
+      A picker, never a free-text id: the value written into the control is the
+      whole row the user clicked, so a copy that was only typed cannot be lent.
+    -->
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'loan.form.book' | translate }}</mat-label>
+      <input matInput formControlName="book" [matAutocomplete]="bookAuto" />
+      @if (booksLoading()) {
+        <mat-spinner matSuffix diameter="18" />
+      }
+      <mat-hint>{{ 'loan.form.bookHint' | translate }}</mat-hint>
+      @if (form.controls.book.hasError('required')) {
+        <mat-error>{{ 'validation.required' | translate }}</mat-error>
+      } @else if (form.controls.book.hasError('notSelected')) {
+        <mat-error>{{ 'loan.form.notSelected' | translate }}</mat-error>
+      } @else if (form.controls.book.hasError('notFound')) {
+        <mat-error>{{ 'error.BOOK_NOT_FOUND' | translate }}</mat-error>
+      } @else if (form.controls.book.hasError('onLoan')) {
+        <mat-error>{{ 'error.BOOK_ALREADY_ON_LOAN' | translate }}</mat-error>
+      } @else if (form.controls.book.hasError('server')) {
+        <mat-error>{{ 'validation.server' | translate }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-autocomplete #bookAuto="matAutocomplete" [displayWith]="displayBook">
+      @for (book of books(); track book.id) {
+        <!--
+          Disabled rather than hidden for a copy that is out: the librarian
+          searched for it and should see that it exists and why it cannot be
+          lent. The server's BOOK_ALREADY_ON_LOAN is what actually enforces it.
+        -->
+        <mat-option [value]="book" [disabled]="book.onLoan">
+          {{
+            'loan.book'
+              | translate: { title: book.title, author: book.author, bookNumber: book.bookNumber }
+          }}
+          @if (book.onLoan) {
+            <span class="option-note">({{ 'loan.form.onLoan' | translate }})</span>
+          }
+        </mat-option>
+      } @empty {
+        <mat-option disabled>{{ 'loan.form.noResults' | translate }}</mat-option>
+      }
+    </mat-autocomplete>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'loan.form.member' | translate }}</mat-label>
+      <input matInput formControlName="member" [matAutocomplete]="memberAuto" />
+      @if (membersLoading()) {
+        <mat-spinner matSuffix diameter="18" />
+      }
+      <mat-hint>{{ 'loan.form.memberHint' | translate }}</mat-hint>
+      @if (form.controls.member.hasError('required')) {
+        <mat-error>{{ 'validation.required' | translate }}</mat-error>
+      } @else if (form.controls.member.hasError('notSelected')) {
+        <mat-error>{{ 'loan.form.notSelected' | translate }}</mat-error>
+      } @else if (form.controls.member.hasError('notFound')) {
+        <mat-error>{{ 'error.MEMBER_NOT_FOUND' | translate }}</mat-error>
+      } @else if (form.controls.member.hasError('tooManyLoans')) {
+        <mat-error>{{ 'error.MEMBER_TOO_MANY_LOANS' | translate }}</mat-error>
+      } @else if (form.controls.member.hasError('server')) {
+        <mat-error>{{ 'validation.server' | translate }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-autocomplete #memberAuto="matAutocomplete" [displayWith]="displayMember">
+      @for (member of members(); track member.id) {
+        <mat-option [value]="member">{{ member.name }}</mat-option>
+      } @empty {
+        <mat-option disabled>{{ 'loan.form.noResults' | translate }}</mat-option>
+      }
+    </mat-autocomplete>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton type="button" mat-dialog-close [disabled]="saving()">
+      {{ 'common.cancel' | translate }}
+    </button>
+    <!--
+      Disabled until both controls hold a picked entity: an id that was typed
+      but never chosen must not reach the server.
+    -->
+    <button matButton="filled" type="submit" [disabled]="saving() || form.invalid">
+      {{ 'loan.form.submit' | translate }}
+    </button>
+  </mat-dialog-actions>
+</form>
