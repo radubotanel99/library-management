@@ -1,0 +1,125 @@
+<header class="header">
+  <h1>{{ 'member.list.title' | translate }}</h1>
+  <button matButton="filled" (click)="openCreateDialog()">
+    <mat-icon>add</mat-icon>
+    {{ 'member.list.add' | translate }}
+  </button>
+</header>
+
+<div class="filters">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>{{ 'member.list.search' | translate }}</mat-label>
+    <input matInput [value]="criteria().search ?? ''" (input)="onSearchInput($event)" />
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+</div>
+
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (loadFailed()) {
+  <div class="placeholder">
+    <p>{{ 'member.list.loadError' | translate }}</p>
+    <button matButton (click)="retry()">{{ 'common.retry' | translate }}</button>
+  </div>
+} @else if (!loading() && members().length === 0) {
+  <div class="placeholder">
+    <p>{{ 'member.list.empty' | translate }}</p>
+  </div>
+} @else {
+  <table
+    mat-table
+    [dataSource]="members()"
+    matSort
+    [matSortActive]="sortActive()"
+    [matSortDirection]="sortDirection()"
+    matSortDisableClear
+    (matSortChange)="onSortChange($event)"
+  >
+    <ng-container matColumnDef="name">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>
+        {{ 'member.column.name' | translate }}
+      </th>
+      <td mat-cell *matCellDef="let member">{{ member.name }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="email">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>
+        {{ 'member.column.email' | translate }}
+      </th>
+      <td mat-cell *matCellDef="let member">
+        {{ member.email || ('common.notSet' | translate) }}
+      </td>
+    </ng-container>
+
+    <!-- Not sortable: the backend whitelists name, email, phoneNumber, createdAt. -->
+    <ng-container matColumnDef="address">
+      <th mat-header-cell *matHeaderCellDef>{{ 'member.column.address' | translate }}</th>
+      <td mat-cell *matCellDef="let member">
+        {{ member.address || ('common.notSet' | translate) }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="phoneNumber">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>
+        {{ 'member.column.phoneNumber' | translate }}
+      </th>
+      <td mat-cell *matCellDef="let member">
+        {{ member.phoneNumber || ('common.notSet' | translate) }}
+      </td>
+    </ng-container>
+
+    <!--
+      Deliberately not sortable: openLoanCount is not a column on `member` but the
+      result of a grouped query over loans, so the server cannot order by it.
+    -->
+    <ng-container matColumnDef="openLoanCount">
+      <th mat-header-cell *matHeaderCellDef>{{ 'member.column.openLoanCount' | translate }}</th>
+      <td mat-cell *matCellDef="let member" class="numeric-cell">{{ member.openLoanCount }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
+      <td mat-cell *matCellDef="let member" class="actions-cell">
+        <button
+          matIconButton
+          [attr.aria-label]="'common.edit' | translate"
+          [matTooltip]="'common.edit' | translate"
+          (click)="openEditDialog(member)"
+        >
+          <mat-icon>edit</mat-icon>
+        </button>
+        <!-- Wrapper span: a disabled button does not emit the events MatTooltip needs. -->
+        <span
+          [matTooltip]="
+            (member.openLoanCount > 0 ? 'member.delete.blocked' : 'common.delete') | translate
+          "
+        >
+          <button
+            matIconButton
+            [disabled]="member.openLoanCount > 0"
+            [attr.aria-label]="'common.delete' | translate"
+            (click)="confirmDelete(member)"
+          >
+            <mat-icon>archive</mat-icon>
+          </button>
+        </span>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+  </table>
+}
+
+<!-- Outside the @else so the page controls survive an empty result set. -->
+@if (!loadFailed()) {
+  <mat-paginator
+    [length]="totalElements()"
+    [pageIndex]="criteria().page ?? 0"
+    [pageSize]="criteria().size ?? 20"
+    [pageSizeOptions]="[10, 20, 50, 100]"
+    (page)="onPageChange($event)"
+  />
+}

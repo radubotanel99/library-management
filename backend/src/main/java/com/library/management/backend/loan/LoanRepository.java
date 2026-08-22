@@ -2,6 +2,7 @@ package com.library.management.backend.loan;
 
 import java.util.Collection;
 import java.util.EnumSet;
+import java.util.List;
 import java.util.Set;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -10,9 +11,11 @@ import org.springframework.data.repository.query.Param;
 /**
  * Data access for {@link Loan}.
  *
- * <p>Only the "is this copy out?" questions so far -- lending and returning arrive
- * with the loans phase. The catalogue needs them to derive {@code onLoan} on a
- * {@code BookResponse} ({@code API_CONTRACT.md} §5).
+ * <p>Only the "what is still out?" questions so far -- lending and returning arrive
+ * with the loans phase. The catalogue asks it per copy, to derive {@code onLoan} on
+ * a {@code BookResponse} ({@code API_CONTRACT.md} §5); members ask it per member, to
+ * derive {@code openLoanCount} on a {@code MemberResponse} ({@code API_CONTRACT.md}
+ * §7) and to refuse archiving a member who still holds books.
  */
 public interface LoanRepository extends JpaRepository<Loan, Long> {
 
@@ -36,4 +39,23 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
     @Query("select l.book.id from Loan l where l.state in :states and l.book.id in :bookIds")
     Set<Long> findBookIdsWithLoanIn(@Param("bookIds") Collection<Long> bookIds,
                                     @Param("states") Collection<LoanState> states);
+
+    boolean existsByMemberIdAndStateIn(Long memberId, Collection<LoanState> states);
+
+    /**
+     * One grouped query for a whole page of members instead of a count per row.
+     *
+     * <p>Members with no matching loan are simply absent from the result -- the
+     * caller defaults them to zero. As with {@link #findBookIdsWithLoanIn}, callers
+     * must skip this query when {@code memberIds} is empty: an empty {@code IN} list
+     * is not valid on every database.
+     */
+    @Query("""
+            select new com.library.management.backend.loan.MemberOpenLoanCount(l.member.id, count(l))
+            from Loan l
+            where l.state in :states and l.member.id in :memberIds
+            group by l.member.id
+            """)
+    List<MemberOpenLoanCount> countLoansByMemberIn(@Param("memberIds") Collection<Long> memberIds,
+                                                   @Param("states") Collection<LoanState> states);
 }

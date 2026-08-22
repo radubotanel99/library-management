@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { MatSnackBar } from '@angular/material/snack-bar';
 import { I18nService } from '../i18n/i18n.service';
-import { isTranslationKey } from '../i18n/translations/translation-key';
+import { isTranslationKey, TranslationKey } from '../i18n/translations/translation-key';
 import { ApiError } from './api-error';
 
 const ERROR_SNACKBAR_DURATION_MS = 6000;
@@ -23,6 +23,15 @@ export class NotificationService {
   showError(err: ApiError): void {
     const candidate = `error.${err.code}`;
     const key = isTranslationKey(candidate) ? candidate : 'error.UNKNOWN';
+    this.showMessage(key);
+  }
+
+  /**
+   * The same snackbar for a message the caller has already chosen, when the
+   * generic `error.${code}` wording is not the one the screen wants — e.g. a
+   * list explaining *why* the row it just tried to archive is still there.
+   */
+  showMessage(key: TranslationKey): void {
     this.snackBar.open(this.i18n.t(key), this.i18n.t('common.dismiss'), {
       duration: ERROR_SNACKBAR_DURATION_MS,
     });

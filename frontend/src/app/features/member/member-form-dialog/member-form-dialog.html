@@ -1,0 +1,65 @@
+<h2 mat-dialog-title>
+  {{ (member ? 'member.form.editTitle' : 'member.form.createTitle') | translate }}
+</h2>
+
+<form [formGroup]="form" (ngSubmit)="submit()">
+  <mat-dialog-content>
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'member.form.name' | translate }}</mat-label>
+      <input matInput formControlName="name" />
+      @if (form.controls.name.hasError('required')) {
+        <mat-error>{{ 'validation.required' | translate }}</mat-error>
+      } @else if (form.controls.name.hasError('maxlength')) {
+        <mat-error>{{ 'validation.maxLength' | translate: { max: nameMaxLength } }}</mat-error>
+      } @else if (form.controls.name.hasError('duplicate')) {
+        <mat-error>{{ 'error.MEMBER_NAME_ALREADY_EXISTS' | translate }}</mat-error>
+      } @else if (form.controls.name.hasError('server')) {
+        <mat-error>{{ 'validation.server' | translate }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'member.form.email' | translate }}</mat-label>
+      <input matInput type="email" formControlName="email" />
+      @if (form.controls.email.hasError('email')) {
+        <mat-error>{{ 'validation.email' | translate }}</mat-error>
+      } @else if (form.controls.email.hasError('maxlength')) {
+        <mat-error>{{ 'validation.maxLength' | translate: { max: emailMaxLength } }}</mat-error>
+      } @else if (form.controls.email.hasError('server')) {
+        <mat-error>{{ 'validation.server' | translate }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'member.form.address' | translate }}</mat-label>
+      <textarea matInput formControlName="address" rows="2"></textarea>
+      @if (form.controls.address.hasError('maxlength')) {
+        <mat-error>{{ 'validation.maxLength' | translate: { max: addressMaxLength } }}</mat-error>
+      } @else if (form.controls.address.hasError('server')) {
+        <mat-error>{{ 'validation.server' | translate }}</mat-error>
+      }
+    </mat-form-field>
+
+    <!-- type="tel", not "number": +40 prefixes and leading zeros are meaningful. -->
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'member.form.phoneNumber' | translate }}</mat-label>
+      <input matInput type="tel" formControlName="phoneNumber" />
+      @if (form.controls.phoneNumber.hasError('maxlength')) {
+        <mat-error>
+          {{ 'validation.maxLength' | translate: { max: phoneNumberMaxLength } }}
+        </mat-error>
+      } @else if (form.controls.phoneNumber.hasError('server')) {
+        <mat-error>{{ 'validation.server' | translate }}</mat-error>
+      }
+    </mat-form-field>
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button matButton type="button" mat-dialog-close [disabled]="saving()">
+      {{ 'common.cancel' | translate }}
+    </button>
+    <button matButton="filled" type="submit" [disabled]="saving()">
+      {{ 'common.save' | translate }}
+    </button>
+  </mat-dialog-actions>
+</form>

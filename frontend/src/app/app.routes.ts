@@ -18,5 +18,10 @@ export const routes: Routes = [
         (m) => m.BookArchiveList,
       ),
   },
+  {
+    path: 'members',
+    loadComponent: () =>
+      import('./features/member/member-list/member-list').then((m) => m.MemberList),
+  },
   { path: '**', redirectTo: 'categories' },
 ];
