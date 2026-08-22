@@ -75,3 +75,21 @@ export interface BookSearchCriteria {
   /** e.g. `title,asc`. */
   sort?: string;
 }
+
+/**
+ * Query parameters for `GET /api/books/archived`: the same as the active
+ * catalogue, plus `status` to narrow the archive to a single removal reason.
+ */
+export interface BookArchiveSearchCriteria extends BookSearchCriteria {
+  status?: RemovalReason | null;
+}
+
+/**
+ * Optional payload for `POST /api/books/{id}/restore` (`API_CONTRACT.md` §5).
+ * Omit `bookNumber` — or the whole body — to restore the copy under its
+ * existing number. Supplying it replaces the number in the same call: this is
+ * the retry path after a `BOOK_NUMBER_TAKEN_ON_RESTORE` collision.
+ */
+export interface BookRestoreRequest {
+  bookNumber?: number | null;
+}

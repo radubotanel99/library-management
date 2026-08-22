@@ -3,6 +3,7 @@ package com.library.management.backend.book;
 import com.library.management.backend.book.dto.BookRemoveRequest;
 import com.library.management.backend.book.dto.BookRequest;
 import com.library.management.backend.book.dto.BookResponse;
+import com.library.management.backend.book.dto.BookRestoreRequest;
 import com.library.management.backend.category.Category;
 import com.library.management.backend.category.CategoryRepository;
 import com.library.management.backend.common.dto.PagedResponse;
@@ -55,6 +56,10 @@ public class BookService {
 
     private static final Sort DEFAULT_SORT = Sort.by("title").ascending();
 
+    /** Every status the archive covers, when the caller does not narrow to one reason. */
+    private static final Set<BookStatus> ARCHIVED_STATUSES =
+            Set.of(BookStatus.LOST, BookStatus.DAMAGED, BookStatus.WITHDRAWN);
+
     private final BookRepository bookRepository;
     private final CategoryRepository categoryRepository;
     private final LoanRepository loanRepository;
@@ -80,6 +85,31 @@ public class BookService {
 
         Page<Book> books = bookRepository.search(
                 BookStatus.ACTIVE, categoryId, pattern, searchNumber, sanitise(pageable));
+
+        Set<Long> onLoanIds = findOnLoanIds(books.getContent());
+
+        return PagedResponse.of(books.map(book ->
+                BookMapper.toResponse(book, onLoanIds.contains(book.getId()))));
+    }
+
+    /**
+     * One page of the archive: everything not {@code ACTIVE}, optionally narrowed
+     * to a single removal reason ({@code API_CONTRACT.md} §5).
+     *
+     * <p>Same shape as {@link #list}, including running the batch on-loan query --
+     * removal is blocked while a copy is on loan, so every row here is {@code false}
+     * in practice, but computing it the same way keeps this method correct if that
+     * rule ever changes instead of silently assuming it never will.
+     */
+    public PagedResponse<BookResponse> listArchived(
+            String search, Long categoryId, RemovalReason reason, Pageable pageable) {
+        String term = normalise(search);
+        String pattern = term == null ? null : "%" + term.toLowerCase(Locale.ROOT) + "%";
+        Integer searchNumber = parseBookNumber(term);
+        Set<BookStatus> statuses = reason == null ? ARCHIVED_STATUSES : Set.of(reason.toBookStatus());
+
+        Page<Book> books = bookRepository.searchArchived(
+                statuses, categoryId, pattern, searchNumber, sanitise(pageable));
 
         Set<Long> onLoanIds = findOnLoanIds(books.getContent());
 
@@ -116,7 +146,7 @@ public class BookService {
         apply(book, request, category);
 
         // A brand new copy cannot be on loan yet, so the flag is known without a query.
-        return BookMapper.toResponse(save(book), false);
+        return BookMapper.toResponse(save(book, ErrorCode.BOOK_NUMBER_ALREADY_EXISTS), false);
     }
 
     /**
@@ -137,7 +167,7 @@ public class BookService {
 
         apply(book, request, category);
 
-        return BookMapper.toResponse(save(book), isOnLoan(id));
+        return BookMapper.toResponse(save(book, ErrorCode.BOOK_NUMBER_ALREADY_EXISTS), isOnLoan(id));
     }
 
     /**
@@ -169,6 +199,49 @@ public class BookService {
 
         // The check above just proved the copy is not out, so no second query.
         return BookMapper.toResponse(saved, false);
+    }
+
+    /**
+     * Puts a copy back into the collection, clearing {@code removalNote}
+     * ({@code API_CONTRACT.md} §5). Restoring is always explicit -- never a side
+     * effect of {@link #update} ({@code DATA_MODEL.md} §4.1).
+     *
+     * <p>{@code request} is optional; when it carries a {@code bookNumber}, that
+     * number replaces the copy's own. This is the retry path after a
+     * {@link ErrorCode#BOOK_NUMBER_TAKEN_ON_RESTORE} collision -- restoring never
+     * invents a number on its own, so a copy keeps the one it went out with unless
+     * the caller supplies a different one. Either way the target number is
+     * pre-checked against the active-only index with the same query {@link #update}
+     * uses, so an ordinary collision is reported without waiting on the flush; the
+     * {@link #save} net below only catches two requests racing each other.
+     */
+    @Transactional
+    public BookResponse restore(Long id, BookRestoreRequest request) {
+        Book book = requireById(id);
+
+        if (book.getStatus() == BookStatus.ACTIVE) {
+            throw new ApiException(ErrorCode.BOOK_NOT_REMOVED);
+        }
+
+        // The category the copy would return to may itself have been archived
+        // while the copy was out.
+        if (!categoryRepository.existsByIdAndDeletedFalse(book.getCategory().getId())) {
+            throw new ApiException(ErrorCode.CATEGORY_NOT_FOUND);
+        }
+
+        Integer bookNumber = request != null && request.bookNumber() != null
+                ? request.bookNumber()
+                : book.getBookNumber();
+
+        if (bookRepository.existsByBookNumberAndStatusAndIdNot(bookNumber, BookStatus.ACTIVE, id)) {
+            throw new ApiException(ErrorCode.BOOK_NUMBER_TAKEN_ON_RESTORE, "bookNumber");
+        }
+
+        book.setBookNumber(bookNumber);
+        book.setStatus(BookStatus.ACTIVE);
+        book.setRemovalNote(null);
+
+        return BookMapper.toResponse(save(book, ErrorCode.BOOK_NUMBER_TAKEN_ON_RESTORE), false);
     }
 
     private void apply(Book book, BookRequest request, Category category) {
@@ -222,12 +295,16 @@ public class BookService {
      *
      * <p>The pre-checks above catch ordinary duplicates; this catch is the
      * race-condition net for two concurrent requests that both pass them.
+     * {@code duplicateNumberCode} lets each caller report the collision under its
+     * own code ({@code BOOK_NUMBER_ALREADY_EXISTS} for create/update,
+     * {@code BOOK_NUMBER_TAKEN_ON_RESTORE} for restore) without duplicating the
+     * catch block.
      */
-    private Book save(Book book) {
+    private Book save(Book book, ErrorCode duplicateNumberCode) {
         try {
             return bookRepository.saveAndFlush(book);
         } catch (DataIntegrityViolationException ex) {
-            throw new ApiException(ErrorCode.BOOK_NUMBER_ALREADY_EXISTS, "bookNumber", ex);
+            throw new ApiException(duplicateNumberCode, "bookNumber", ex);
         }
     }
 

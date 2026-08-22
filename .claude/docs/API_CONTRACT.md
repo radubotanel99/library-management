@@ -87,7 +87,7 @@ Implemented once as a `@RestControllerAdvice` — not per-controller.
 | `MEMBER_NOT_FOUND` | 404 | No active member with the given id |
 | `CATEGORY_NAME_ALREADY_EXISTS` | 409 | Duplicate active category name |
 | `CATEGORY_HAS_BOOKS` | 409 | Archiving a category that still has active books |
-| `CATEGORY_NOT_FOUND` | 404 | No active category with the given id |
+| `CATEGORY_NOT_FOUND` | 404 | No active category with the given id (also raised restoring a book whose category has since been archived) |
 | `LOAN_ALREADY_FINISHED` | 409 | Returning a loan already in `FINISHED` |
 | `LOAN_NOT_FOUND` | 404 | No loan with the given id |
 | `PARAMETER_INVALID_VALUE` | 400 | Parameter value not a positive integer |
@@ -113,6 +113,8 @@ Query parameters (all optional, combinable):
 | `page` | number | 0-based, default `0` |
 | `size` | number | Default `20` |
 | `sort` | string | e.g. `title,asc` |
+
+`GET /api/books/archived` additionally accepts `status` (one of `LOST`/`DAMAGED`/`WITHDRAWN`) to filter by removal reason.
 
 Response `200` — paged:
 
@@ -159,7 +161,7 @@ Response `200` — paged:
 | `POST` | `/api/books` | `BookRequest` | `201` `BookResponse` | |
 | `PUT` | `/api/books/{id}` | `BookRequest` | `200` `BookResponse` | **Never changes `status`** |
 | `POST` | `/api/books/{id}/remove` | `BookRemoveRequest` | `200` `BookResponse` | Sets status + note |
-| `POST` | `/api/books/{id}/restore` | — | `200` `BookResponse` | Back to `ACTIVE`, clears note |
+| `POST` | `/api/books/{id}/restore` | `BookRestoreRequest?` (optional) | `200` `BookResponse` | Back to `ACTIVE`, clears note |
 
 ### `BookRequest`
 
@@ -190,7 +192,15 @@ Errors: `BOOK_HAS_OPEN_LOAN` (409).
 
 ### Restore
 
-Errors: `BOOK_NOT_REMOVED` (409) if already active; `BOOK_NUMBER_TAKEN_ON_RESTORE` (409) if the number is now in use — the frontend prompts for a new number and retries via `PUT` then `POST /restore`.
+Body (optional):
+
+```json
+{ "bookNumber": 1305 }
+```
+
+`bookNumber` optional, positive. Omit to restore with the book's existing number. Supply it to retry after a `BOOK_NUMBER_TAKEN_ON_RESTORE` collision — this replaces the number in the same call, no separate `PUT` needed.
+
+Errors: `BOOK_NOT_REMOVED` (409) if already active; `CATEGORY_NOT_FOUND` (404) if the book's category has since been archived; `BOOK_NUMBER_TAKEN_ON_RESTORE` (409) if the number (existing or supplied) is now in use by an active book — the frontend prompts for a new number and retries `POST /restore` with `bookNumber` set.
 
 ---
 

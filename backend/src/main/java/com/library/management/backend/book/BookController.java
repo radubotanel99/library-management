@@ -3,6 +3,7 @@ package com.library.management.backend.book;
 import com.library.management.backend.book.dto.BookRemoveRequest;
 import com.library.management.backend.book.dto.BookRequest;
 import com.library.management.backend.book.dto.BookResponse;
+import com.library.management.backend.book.dto.BookRestoreRequest;
 import com.library.management.backend.common.dto.PagedResponse;
 import jakarta.validation.Valid;
 import java.net.URI;
@@ -48,6 +49,16 @@ public class BookController {
         return bookService.list(search, categoryId, pageable);
     }
 
+    /** Everything not {@code ACTIVE}, optionally narrowed to one removal reason. */
+    @GetMapping("/archived")
+    public PagedResponse<BookResponse> listArchived(
+            @RequestParam(required = false) String search,
+            @RequestParam(required = false) Long categoryId,
+            @RequestParam(required = false) RemovalReason status,
+            @PageableDefault(size = 20, sort = "title") Pageable pageable) {
+        return bookService.listArchived(search, categoryId, status, pageable);
+    }
+
     /** Resolves a copy of any status, so a loan can always name the book it points at. */
     @GetMapping("/{id}")
     public BookResponse findById(@PathVariable Long id) {
@@ -82,5 +93,16 @@ public class BookController {
     @PostMapping("/{id}/remove")
     public BookResponse remove(@PathVariable Long id, @Valid @RequestBody BookRemoveRequest request) {
         return bookService.remove(id, request);
+    }
+
+    /**
+     * Puts a copy back into the collection. No body is required; an optional
+     * {@code bookNumber} retries after a {@code BOOK_NUMBER_TAKEN_ON_RESTORE}
+     * collision without a separate {@code PUT}.
+     */
+    @PostMapping("/{id}/restore")
+    public BookResponse restore(@PathVariable Long id,
+                                @Valid @RequestBody(required = false) BookRestoreRequest request) {
+        return bookService.restore(id, request);
     }
 }

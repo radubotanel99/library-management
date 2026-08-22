@@ -3,7 +3,7 @@ import { HttpTestingController, provideHttpClientTesting } from '@angular/common
 import { TestBed } from '@angular/core/testing';
 import { PagedResponse } from '../../core/http/paged-response';
 import { environment } from '../../../environments/environment';
-import { BookRemoveRequest, BookRequest, BookResponse } from './book.model';
+import { BookRemoveRequest, BookRequest, BookResponse, BookRestoreRequest } from './book.model';
 import { BookService } from './book.service';
 
 const BOOKS_URL = `${environment.apiBaseUrl}/books`;
@@ -167,5 +167,51 @@ describe('BookService', () => {
 
     expect(result?.status).toBe('LOST');
     expect(result?.removalNote).toBe('Not returned by member');
+  });
+
+  it('lists archived books without any query parameters when the criteria are empty', () => {
+    let result: PagedResponse<BookResponse> | undefined;
+    service.archivedList({}).subscribe((books) => (result = books));
+
+    const request = http.expectOne(`${BOOKS_URL}/archived`);
+    expect(request.request.method).toBe('GET');
+    expect(request.request.params.keys()).toEqual([]);
+    request.flush(page);
+
+    expect(result).toEqual(page);
+  });
+
+  it('narrows the archive listing to a single removal reason', () => {
+    service.archivedList({ status: 'LOST', categoryId: 3 }).subscribe();
+
+    const request = http.expectOne((req) => req.url === `${BOOKS_URL}/archived`);
+    expect(request.request.params.get('status')).toBe('LOST');
+    expect(request.request.params.get('categoryId')).toBe('3');
+    request.flush(page);
+  });
+
+  it('restores a book with no body when no new number is given', () => {
+    const restored: BookResponse = { ...amintiri, status: 'ACTIVE', removalNote: null };
+    let result: BookResponse | undefined;
+    service.restore(41).subscribe((book) => (result = book));
+
+    // POST to /{id}/restore, not a PUT: the retry-with-a-new-number path is
+    // folded into this same call (`API_CONTRACT.md` §5).
+    const request = http.expectOne(`${BOOKS_URL}/41/restore`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual({});
+    request.flush(restored);
+
+    expect(result?.status).toBe('ACTIVE');
+  });
+
+  it('restores a book with a new number after a number collision', () => {
+    const payload: BookRestoreRequest = { bookNumber: 1305 };
+    service.restore(41, payload).subscribe();
+
+    const request = http.expectOne(`${BOOKS_URL}/41/restore`);
+    expect(request.request.method).toBe('POST');
+    expect(request.request.body).toEqual(payload);
+    request.flush({ ...amintiri, status: 'ACTIVE', removalNote: null, bookNumber: 1305 });
   });
 });

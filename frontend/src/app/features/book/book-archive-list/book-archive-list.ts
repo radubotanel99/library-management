@@ -1,4 +1,3 @@
-import { DecimalPipe } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -16,18 +15,22 @@ import { catchError, debounceTime, distinctUntilChanged, EMPTY, switchMap, tap }
 import { ApiError } from '../../../core/error/api-error';
 import { NotificationService } from '../../../core/error/notification.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { TranslationKey } from '../../../core/i18n/translations/translation-key';
 import { CategoryResponse } from '../../category/category.model';
 import { CategoryService } from '../../category/category.service';
-import { BookFormDialog, BookFormDialogData } from '../book-form-dialog/book-form-dialog';
-import { BookRemoveDialog, BookRemoveDialogData } from '../book-remove-dialog/book-remove-dialog';
-import { BookResponse, BookSearchCriteria } from '../book.model';
+import {
+  BookRestoreDialog,
+  BookRestoreDialogData,
+} from '../book-restore-dialog/book-restore-dialog';
+import { REMOVAL_REASONS } from '../book-remove-dialog/book-remove-dialog';
+import { BookArchiveSearchCriteria, BookResponse, RemovalReason } from '../book.model';
 import { BookService } from '../book.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
 
 @Component({
-  selector: 'app-book-list',
+  selector: 'app-book-archive-list',
   imports: [
     MatTableModule,
     MatSortModule,
@@ -39,13 +42,12 @@ const SEARCH_DEBOUNCE_MS = 300;
     MatIconModule,
     MatTooltipModule,
     MatProgressBarModule,
-    DecimalPipe,
     TranslatePipe,
   ],
-  templateUrl: './book-list.html',
-  styleUrl: './book-list.css',
+  templateUrl: './book-archive-list.html',
+  styleUrl: './book-archive-list.css',
 })
-export class BookList implements OnInit {
+export class BookArchiveList implements OnInit {
   private readonly bookService = inject(BookService);
   private readonly categoryService = inject(CategoryService);
   private readonly dialog = inject(MatDialog);
@@ -57,18 +59,22 @@ export class BookList implements OnInit {
   protected readonly loading = signal(false);
   protected readonly loadFailed = signal(false);
 
-  protected readonly criteria = signal<BookSearchCriteria>({
+  protected readonly reasons = REMOVAL_REASONS;
+
+  protected readonly criteria = signal<BookArchiveSearchCriteria>({
     search: '',
     categoryId: null,
+    status: null,
     page: 0,
     size: DEFAULT_PAGE_SIZE,
     sort: 'title,asc',
   });
 
   /**
-   * Bumped by the retry button. It rides along with the criteria so that asking
-   * for the *same* page again still reaches the server — `distinctUntilChanged`
-   * would otherwise swallow an identical criteria object. It is never sent.
+   * Bumped by the retry button (and by every successful restore). It rides
+   * along with the criteria so that asking for the *same* page again still
+   * reaches the server — `distinctUntilChanged` would otherwise swallow an
+   * identical criteria object. It is never sent.
    */
   private readonly attempt = signal(0);
 
@@ -82,19 +88,17 @@ export class BookList implements OnInit {
     () => (this.criteria().sort?.split(',')[1] ?? 'asc') as 'asc' | 'desc' | '',
   );
 
-  // bookNumber is only unique among ACTIVE books (`DATA_MODEL.md` §4, and the
-  // "things that look like bugs" list in CLAUDE.md): a removed copy frees its
-  // number for reuse. So the number alone never identifies a book to a human —
-  // title and author must stay in this table. Do not strip them for a
-  // "compact" view.
+  // bookNumber is only unique among ACTIVE books (`DATA_MODEL.md` §4): an
+  // archived copy's number may already have been reused by another active
+  // book, so it never identifies a row here on its own. Title and author must
+  // stay in this table.
   protected readonly displayedColumns = [
     'bookNumber',
     'title',
     'author',
     'categoryName',
-    'publisher',
-    'price',
-    'onLoan',
+    'reason',
+    'removalNote',
     'actions',
   ];
 
@@ -110,7 +114,7 @@ export class BookList implements OnInit {
         // switchMap, not mergeMap: a slow response for an earlier keystroke must
         // never overwrite the results of a later, faster one.
         switchMap(({ criteria }) =>
-          this.bookService.list(criteria).pipe(
+          this.bookService.archivedList(criteria).pipe(
             catchError((error: ApiError) => {
               this.loading.set(false);
               this.loadFailed.set(true);
@@ -126,7 +130,7 @@ export class BookList implements OnInit {
       .subscribe((page) => {
         const requestedPage = this.criteria().page ?? 0;
         if (page.content.length === 0 && page.totalElements > 0 && requestedPage > 0) {
-          // The row that made this page empty is gone (removed, typically the
+          // The row that made this page empty is gone (restored, typically the
           // last row on the last page) -- step back rather than show an
           // impossible empty page above real data. Re-enters this same pipeline,
           // so no separate fetch logic is needed.
@@ -146,6 +150,15 @@ export class BookList implements OnInit {
     });
   }
 
+  /**
+   * The `book.status.*` keys are named after the status values, so the key is
+   * derived rather than looked up — and the declared `TranslationKey` return
+   * type makes a missing translation a compile error.
+   */
+  protected reasonLabelKey(reason: RemovalReason): TranslationKey {
+    return `book.status.${reason}`;
+  }
+
   protected retry(): void {
     this.attempt.update((n) => n + 1);
   }
@@ -160,9 +173,13 @@ export class BookList implements OnInit {
     this.criteria.update((criteria) => ({ ...criteria, categoryId, page: 0 }));
   }
 
+  protected onReasonChange(status: RemovalReason | null): void {
+    this.criteria.update((criteria) => ({ ...criteria, status, page: 0 }));
+  }
+
   /**
    * Sorting is server-side. Sorting only the rows of the current page in the
-   * browser would silently mis-order the catalogue, because the other pages are
+   * browser would silently mis-order the archive, because the other pages are
    * not loaded.
    */
   protected onSortChange(sort: Sort): void {
@@ -178,40 +195,35 @@ export class BookList implements OnInit {
     }));
   }
 
-  protected openCreateDialog(): void {
-    this.openFormDialog(null);
-  }
-
-  protected openEditDialog(book: BookResponse): void {
-    this.openFormDialog(book);
-  }
-
   /**
-   * The button is disabled for a copy that is out, so this normally only opens for
-   * a removable one; the server's `BOOK_HAS_OPEN_LOAN` covers the stale-list race.
+   * Restores directly, with no confirmation dialog: there is no input to
+   * gather for the happy path. The dialog only opens on the one error that
+   * needs one — a number now taken by another active book.
    */
-  protected openRemoveDialog(book: BookResponse): void {
-    this.dialog
-      .open<BookRemoveDialog, BookRemoveDialogData, BookResponse>(BookRemoveDialog, { data: book })
-      .afterClosed()
-      .subscribe((removed) => {
-        if (removed) {
-          // Re-fetch rather than drop the row locally: the catalogue is filtered
-          // server-side to ACTIVE copies, and that filter is what makes the row
-          // disappear — and the following page shift up — correctly.
-          this.retry();
+  protected restore(book: BookResponse): void {
+    this.bookService.restore(book.id).subscribe({
+      next: () => this.retry(),
+      error: (error: ApiError) => {
+        if (error.code === 'BOOK_NUMBER_TAKEN_ON_RESTORE') {
+          this.openRestoreDialog(book);
+          return;
         }
-      });
+        this.notifications.showError(error);
+      },
+    });
   }
 
-  private openFormDialog(book: BookFormDialogData): void {
+  private openRestoreDialog(book: BookResponse): void {
     this.dialog
-      .open<BookFormDialog, BookFormDialogData, BookResponse>(BookFormDialog, { data: book })
+      .open<BookRestoreDialog, BookRestoreDialogData, BookResponse>(BookRestoreDialog, {
+        data: book,
+      })
       .afterClosed()
-      .subscribe((saved) => {
-        if (saved) {
-          // Re-fetch rather than patch the array: with server-side paging and
-          // sorting, the saved row may belong on a different page entirely.
+      .subscribe((restored) => {
+        if (restored) {
+          // Re-fetch rather than drop the row locally: the archive is filtered
+          // server-side, and that filter is what makes the restored row
+          // disappear — and the following page shift up — correctly.
           this.retry();
         }
       });

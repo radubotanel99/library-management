@@ -2,6 +2,7 @@ package com.library.management.backend.book;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -68,6 +69,44 @@ public interface BookRepository extends JpaRepository<Book, Long> {
                       @Param("pattern") String pattern,
                       @Param("searchNumber") Integer searchNumber,
                       Pageable pageable);
+
+    /**
+     * One page of the archive: everything not {@code ACTIVE}, or narrowed to a
+     * single removal reason ({@code API_CONTRACT.md} §5).
+     *
+     * <p>A {@code status in :statuses} guard rather than {@code <>} so the service
+     * can pass either all three archived statuses or just the one the caller asked
+     * for, with no second query method. Otherwise identical to {@link #search}:
+     * fetch-joined category, hand-written count query, same search-term guards.
+     *
+     * <p>{@code bookNumber} may repeat across the rows this returns -- the partial
+     * unique index only covers {@code ACTIVE} copies -- so callers must not treat it
+     * as a key here.
+     */
+    @Query(value = """
+            select b from Book b
+            join fetch b.category c
+            where b.status in :statuses
+              and (:categoryId is null or c.id = :categoryId)
+              and (:pattern is null
+                   or lower(b.title) like :pattern
+                   or lower(b.author) like :pattern
+                   or b.bookNumber = :searchNumber)
+            """,
+            countQuery = """
+            select count(b) from Book b
+            where b.status in :statuses
+              and (:categoryId is null or b.category.id = :categoryId)
+              and (:pattern is null
+                   or lower(b.title) like :pattern
+                   or lower(b.author) like :pattern
+                   or b.bookNumber = :searchNumber)
+            """)
+    Page<Book> searchArchived(@Param("statuses") Set<BookStatus> statuses,
+                              @Param("categoryId") Long categoryId,
+                              @Param("pattern") String pattern,
+                              @Param("searchNumber") Integer searchNumber,
+                              Pageable pageable);
 
     /**
      * One grouped query for the whole category list, instead of a count per row.

@@ -9,12 +9,14 @@ export const en = {
 
   'nav.categories': 'Categories',
   'nav.books': 'Books',
+  'nav.archive': 'Archive',
 
   'common.language': 'Language',
   'common.actions': 'Actions',
   'common.edit': 'Edit',
   'common.delete': 'Delete',
   'common.remove': 'Remove',
+  'common.restore': 'Restore',
   'common.cancel': 'Cancel',
   'common.save': 'Save',
   'common.retry': 'Retry',
@@ -73,6 +75,18 @@ export const en = {
   'book.status.DAMAGED': 'Damaged',
   'book.status.WITHDRAWN': 'Withdrawn',
 
+  'book.archive.title': 'Archive',
+  'book.archive.empty': 'No archived books match the current filters.',
+  'book.archive.loadError': 'The archive could not be loaded.',
+  'book.archive.search': 'Search by title, author or number',
+  'book.archive.allReasons': 'All reasons',
+  'book.column.reason': 'Reason',
+  'book.column.removalNote': 'Note',
+  'book.restore.title': 'Restore book',
+  'book.restore.message':
+    'Restore "{{title}}" by {{author}} to the collection. Number {{bookNumber}} is now used by another active book — choose a different one.',
+  'book.restore.bookNumber': 'New book number',
+
   'validation.required': 'This field is required.',
   'validation.maxLength': 'Use at most {{max}} characters.',
   'validation.min': 'Use a value of at least {{min}}.',
@@ -81,6 +95,8 @@ export const en = {
   'error.BOOK_NUMBER_ALREADY_EXISTS': 'An active book already uses this number.',
   'error.BOOK_NOT_FOUND': 'This book no longer exists.',
   'error.BOOK_HAS_OPEN_LOAN': 'This book is on loan and cannot be removed until it is returned.',
+  'error.BOOK_NOT_REMOVED': 'This book has already been restored.',
+  'error.BOOK_NUMBER_TAKEN_ON_RESTORE': 'This book number is now used by another active book.',
   'error.CATEGORY_NAME_ALREADY_EXISTS': 'A category with this name already exists.',
   'error.CATEGORY_HAS_BOOKS': 'This category still has books and cannot be deleted.',
   'error.CATEGORY_NOT_FOUND': 'This category no longer exists.',

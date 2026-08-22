@@ -1,0 +1,137 @@
+<header class="header">
+  <h1>{{ 'book.archive.title' | translate }}</h1>
+</header>
+
+<div class="filters">
+  <mat-form-field appearance="outline" class="search-field">
+    <mat-label>{{ 'book.archive.search' | translate }}</mat-label>
+    <input matInput [value]="criteria().search ?? ''" (input)="onSearchInput($event)" />
+    <mat-icon matSuffix>search</mat-icon>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="category-field">
+    <mat-label>{{ 'book.list.category' | translate }}</mat-label>
+    <mat-select
+      [value]="criteria().categoryId ?? null"
+      (selectionChange)="onCategoryChange($event.value)"
+    >
+      <mat-option [value]="null">{{ 'book.list.allCategories' | translate }}</mat-option>
+      @for (category of categories(); track category.id) {
+        <mat-option [value]="category.id">{{ category.name }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+
+  <mat-form-field appearance="outline" class="reason-field">
+    <mat-label>{{ 'book.remove.reason' | translate }}</mat-label>
+    <mat-select
+      [value]="criteria().status ?? null"
+      (selectionChange)="onReasonChange($event.value)"
+    >
+      <mat-option [value]="null">{{ 'book.archive.allReasons' | translate }}</mat-option>
+      @for (reason of reasons; track reason) {
+        <mat-option [value]="reason">{{ reasonLabelKey(reason) | translate }}</mat-option>
+      }
+    </mat-select>
+  </mat-form-field>
+</div>
+
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (loadFailed()) {
+  <div class="placeholder">
+    <p>{{ 'book.archive.loadError' | translate }}</p>
+    <button matButton (click)="retry()">{{ 'common.retry' | translate }}</button>
+  </div>
+} @else if (!loading() && books().length === 0) {
+  <div class="placeholder">
+    <p>{{ 'book.archive.empty' | translate }}</p>
+  </div>
+} @else {
+  <table
+    mat-table
+    [dataSource]="books()"
+    matSort
+    [matSortActive]="sortActive()"
+    [matSortDirection]="sortDirection()"
+    matSortDisableClear
+    (matSortChange)="onSortChange($event)"
+  >
+    <!--
+      bookNumber, title and author travel together on purpose: a book number is
+      unique only among ACTIVE books, so an archived copy's number may already
+      have been reused by another active book (`DATA_MODEL.md` §4). The number
+      alone does not identify a row here. Do not drop title/author.
+    -->
+    <ng-container matColumnDef="bookNumber">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>
+        {{ 'book.column.bookNumber' | translate }}
+      </th>
+      <td mat-cell *matCellDef="let book">{{ book.bookNumber }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="title">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>
+        {{ 'book.column.title' | translate }}
+      </th>
+      <td mat-cell *matCellDef="let book">{{ book.title }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="author">
+      <th mat-header-cell *matHeaderCellDef mat-sort-header>
+        {{ 'book.column.author' | translate }}
+      </th>
+      <td mat-cell *matCellDef="let book">{{ book.author }}</td>
+    </ng-container>
+
+    <!-- Not sortable in this phase: the backend does not sort across the join. -->
+    <ng-container matColumnDef="categoryName">
+      <th mat-header-cell *matHeaderCellDef>{{ 'book.column.category' | translate }}</th>
+      <td mat-cell *matCellDef="let book">{{ book.categoryName }}</td>
+    </ng-container>
+
+    <ng-container matColumnDef="reason">
+      <th mat-header-cell *matHeaderCellDef>{{ 'book.column.reason' | translate }}</th>
+      <td mat-cell *matCellDef="let book">
+        {{ reasonLabelKey(book.status) | translate }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="removalNote">
+      <th mat-header-cell *matHeaderCellDef>{{ 'book.column.removalNote' | translate }}</th>
+      <td mat-cell *matCellDef="let book">
+        {{ book.removalNote || ('common.notSet' | translate) }}
+      </td>
+    </ng-container>
+
+    <ng-container matColumnDef="actions">
+      <th mat-header-cell *matHeaderCellDef>{{ 'common.actions' | translate }}</th>
+      <td mat-cell *matCellDef="let book" class="actions-cell">
+        <button
+          matIconButton
+          [attr.aria-label]="'common.restore' | translate"
+          [matTooltip]="'common.restore' | translate"
+          (click)="restore(book)"
+        >
+          <mat-icon>unarchive</mat-icon>
+        </button>
+      </td>
+    </ng-container>
+
+    <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+    <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+  </table>
+}
+
+<!-- Outside the @else so the page controls survive an empty result set. -->
+@if (!loadFailed()) {
+  <mat-paginator
+    [length]="totalElements()"
+    [pageIndex]="criteria().page ?? 0"
+    [pageSize]="criteria().size ?? 20"
+    [pageSizeOptions]="[10, 20, 50, 100]"
+    (page)="onPageChange($event)"
+  />
+}

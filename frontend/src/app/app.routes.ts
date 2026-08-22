@@ -11,5 +11,12 @@ export const routes: Routes = [
     path: 'books',
     loadComponent: () => import('./features/book/book-list/book-list').then((m) => m.BookList),
   },
+  {
+    path: 'books/archive',
+    loadComponent: () =>
+      import('./features/book/book-archive-list/book-archive-list').then(
+        (m) => m.BookArchiveList,
+      ),
+  },
   { path: '**', redirectTo: 'categories' },
 ];

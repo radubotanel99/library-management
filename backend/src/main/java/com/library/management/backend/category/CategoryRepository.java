@@ -18,6 +18,8 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
     Optional<Category> findByIdAndDeletedFalse(Long id);
 
+    boolean existsByIdAndDeletedFalse(Long id);
+
     boolean existsByNameIgnoreCaseAndDeletedFalse(String name);
 
     /** Duplicate check for updates: the category being edited is not its own duplicate. */

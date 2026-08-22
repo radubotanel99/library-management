@@ -2,8 +2,16 @@
   <span class="title">{{ 'app.title' | translate }}</span>
 
   <nav>
-    <a matButton routerLink="/books" routerLinkActive="active-link">
+    <a
+      matButton
+      routerLink="/books"
+      routerLinkActive="active-link"
+      [routerLinkActiveOptions]="{ exact: true }"
+    >
       {{ 'nav.books' | translate }}
+    </a>
+    <a matButton routerLink="/books/archive" routerLinkActive="active-link">
+      {{ 'nav.archive' | translate }}
     </a>
     <a matButton routerLink="/categories" routerLinkActive="active-link">
       {{ 'nav.categories' | translate }}

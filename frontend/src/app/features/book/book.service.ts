@@ -3,7 +3,14 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs';
 import { PagedResponse } from '../../core/http/paged-response';
 import { environment } from '../../../environments/environment';
-import { BookRemoveRequest, BookRequest, BookResponse, BookSearchCriteria } from './book.model';
+import {
+  BookArchiveSearchCriteria,
+  BookRemoveRequest,
+  BookRequest,
+  BookResponse,
+  BookRestoreRequest,
+  BookSearchCriteria,
+} from './book.model';
 
 /**
  * The only place in the book feature that touches `HttpClient`.
@@ -19,6 +26,25 @@ export class BookService {
 
   /** Active catalogue only, paged (`API_CONTRACT.md` §5). */
   list(criteria: BookSearchCriteria): Observable<PagedResponse<BookResponse>> {
+    return this.http.get<PagedResponse<BookResponse>>(this.baseUrl, {
+      params: this.buildListParams(criteria),
+    });
+  }
+
+  /**
+   * Everything not `ACTIVE`, paged (`API_CONTRACT.md` §5). Same query params as
+   * {@link list}, plus `status` to narrow to a single removal reason.
+   */
+  archivedList(criteria: BookArchiveSearchCriteria): Observable<PagedResponse<BookResponse>> {
+    let params = this.buildListParams(criteria);
+    if (criteria.status) {
+      params = params.set('status', criteria.status);
+    }
+    return this.http.get<PagedResponse<BookResponse>>(`${this.baseUrl}/archived`, { params });
+  }
+
+  /** Common query params shared by the active and archived listings. */
+  private buildListParams(criteria: BookSearchCriteria): HttpParams {
     let params = new HttpParams();
     // Each parameter is omitted rather than sent empty: `?categoryId=` would
     // reach the backend as a bad Long rather than as "no filter".
@@ -38,7 +64,7 @@ export class BookService {
     if (criteria.sort) {
       params = params.set('sort', criteria.sort);
     }
-    return this.http.get<PagedResponse<BookResponse>>(this.baseUrl, { params });
+    return params;
   }
 
   /** Resolves a copy of any status, so an archived copy stays addressable. */
@@ -65,5 +91,14 @@ export class BookService {
    */
   remove(id: number, request: BookRemoveRequest): Observable<BookResponse> {
     return this.http.post<BookResponse>(`${this.baseUrl}/${id}/remove`, request);
+  }
+
+  /**
+   * Puts a copy back into the collection. No body is required; an optional
+   * `bookNumber` retries after a `BOOK_NUMBER_TAKEN_ON_RESTORE` collision without
+   * a separate `PUT` (`API_CONTRACT.md` §5).
+   */
+  restore(id: number, request?: BookRestoreRequest): Observable<BookResponse> {
+    return this.http.post<BookResponse>(`${this.baseUrl}/${id}/restore`, request ?? {});
   }
 }

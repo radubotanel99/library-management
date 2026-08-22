@@ -11,12 +11,14 @@ export const ro: Record<TranslationKey, string> = {
 
   'nav.categories': 'Categorii',
   'nav.books': 'Cărți',
+  'nav.archive': 'Arhivă',
 
   'common.language': 'Limbă',
   'common.actions': 'Acțiuni',
   'common.edit': 'Modifică',
   'common.delete': 'Șterge',
   'common.remove': 'Scoate din colecție',
+  'common.restore': 'Repune în colecție',
   'common.cancel': 'Anulează',
   'common.save': 'Salvează',
   'common.retry': 'Reîncearcă',
@@ -75,6 +77,18 @@ export const ro: Record<TranslationKey, string> = {
   'book.status.DAMAGED': 'Deteriorată',
   'book.status.WITHDRAWN': 'Retrasă',
 
+  'book.archive.title': 'Arhivă',
+  'book.archive.empty': 'Nicio carte arhivată nu corespunde filtrelor curente.',
+  'book.archive.loadError': 'Arhiva nu a putut fi încărcată.',
+  'book.archive.search': 'Caută după titlu, autor sau număr',
+  'book.archive.allReasons': 'Toate motivele',
+  'book.column.reason': 'Motiv',
+  'book.column.removalNote': 'Observații',
+  'book.restore.title': 'Repune cartea în colecție',
+  'book.restore.message':
+    'Repui în colecție „{{title}}” de {{author}}. Numărul {{bookNumber}} este folosit acum de altă carte activă — alege alt număr.',
+  'book.restore.bookNumber': 'Număr nou de inventar',
+
   'validation.required': 'Acest câmp este obligatoriu.',
   'validation.maxLength': 'Folosește cel mult {{max}} caractere.',
   'validation.min': 'Folosește o valoare de cel puțin {{min}}.',
@@ -84,6 +98,8 @@ export const ro: Record<TranslationKey, string> = {
   'error.BOOK_NOT_FOUND': 'Această carte nu mai există.',
   'error.BOOK_HAS_OPEN_LOAN':
     'Cartea este împrumutată și nu poate fi scoasă din colecție până nu este returnată.',
+  'error.BOOK_NOT_REMOVED': 'Această carte a fost deja repusă în colecție.',
+  'error.BOOK_NUMBER_TAKEN_ON_RESTORE': 'Acest număr este folosit acum de altă carte activă.',
   'error.CATEGORY_NAME_ALREADY_EXISTS': 'Există deja o categorie cu acest nume.',
   'error.CATEGORY_HAS_BOOKS': 'Categoria are cărți asociate și nu poate fi ștearsă.',
   'error.CATEGORY_NOT_FOUND': 'Această categorie nu mai există.',

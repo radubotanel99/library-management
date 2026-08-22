@@ -14,6 +14,7 @@ import static org.mockito.Mockito.when;
 import com.library.management.backend.book.dto.BookRemoveRequest;
 import com.library.management.backend.book.dto.BookRequest;
 import com.library.management.backend.book.dto.BookResponse;
+import com.library.management.backend.book.dto.BookRestoreRequest;
 import com.library.management.backend.category.Category;
 import com.library.management.backend.category.CategoryRepository;
 import com.library.management.backend.common.dto.PagedResponse;
@@ -415,6 +416,182 @@ class BookServiceTest {
             verify(bookRepository, never()).saveAndFlush(any());
             assertThat(archived.getStatus()).isEqualTo(BookStatus.WITHDRAWN);
             assertThat(archived.getRemovalNote()).isEqualTo("Superseded edition");
+        }
+    }
+
+    @Nested
+    @DisplayName("listArchived")
+    class ListArchived {
+
+        private static final Pageable FIRST_PAGE = PageRequest.of(0, 20, Sort.by("title"));
+
+        private void stubSearch(Page<Book> page) {
+            when(bookRepository.searchArchived(any(), any(), any(), any(), any())).thenReturn(page);
+        }
+
+        @Test
+        void searchesEveryArchivedStatusWhenNoReasonIsGiven() {
+            stubSearch(new PageImpl<>(List.of(), FIRST_PAGE, 0));
+
+            bookService.listArchived(null, null, null, FIRST_PAGE);
+
+            verify(bookRepository).searchArchived(
+                    eq(Set.of(BookStatus.LOST, BookStatus.DAMAGED, BookStatus.WITHDRAWN)),
+                    eq(null), eq(null), eq(null), any(Pageable.class));
+        }
+
+        @Test
+        void narrowsToTheSingleReasonWhenGiven() {
+            stubSearch(new PageImpl<>(List.of(), FIRST_PAGE, 0));
+
+            bookService.listArchived(null, null, RemovalReason.LOST, FIRST_PAGE);
+
+            verify(bookRepository).searchArchived(
+                    eq(Set.of(BookStatus.LOST)), eq(null), eq(null), eq(null), any(Pageable.class));
+        }
+
+        @Test
+        void marksOnlyTheCopiesWithAnOpenLoan() {
+            List<Book> books = List.of(
+                    book(41L, 1201, BookStatus.LOST), book(42L, 1202, BookStatus.WITHDRAWN));
+            stubSearch(new PageImpl<>(books, FIRST_PAGE, 2));
+            when(loanRepository.findBookIdsWithLoanIn(anyCollection(), eq(LoanRepository.OPEN_STATES)))
+                    .thenReturn(Set.of(42L));
+
+            PagedResponse<BookResponse> result = bookService.listArchived(null, null, null, FIRST_PAGE);
+
+            assertThat(result.content())
+                    .extracting(BookResponse::id, BookResponse::onLoan)
+                    .containsExactly(tuple(41L, false), tuple(42L, true));
+        }
+    }
+
+    @Nested
+    @DisplayName("restore")
+    class Restore {
+
+        @Test
+        void clearsTheNoteAndReturnsToActiveKeepingItsOwnNumber() {
+            Book archived = book(41L, 1201, BookStatus.WITHDRAWN);
+            archived.setRemovalNote("Superseded edition");
+            when(bookRepository.findById(41L)).thenReturn(Optional.of(archived));
+            when(categoryRepository.existsByIdAndDeletedFalse(3L)).thenReturn(true);
+            when(bookRepository.existsByBookNumberAndStatusAndIdNot(1201, BookStatus.ACTIVE, 41L))
+                    .thenReturn(false);
+            when(bookRepository.saveAndFlush(archived)).thenReturn(archived);
+
+            BookResponse result = bookService.restore(41L, null);
+
+            assertThat(archived.getStatus()).isEqualTo(BookStatus.ACTIVE);
+            assertThat(archived.getRemovalNote()).isNull();
+            assertThat(archived.getBookNumber()).isEqualTo(1201);
+            assertThat(result.status()).isEqualTo(BookStatus.ACTIVE);
+            assertThat(result.removalNote()).isNull();
+        }
+
+        @Test
+        void appliesASuppliedNumberInTheSameCall() {
+            Book archived = book(41L, 1201, BookStatus.LOST);
+            when(bookRepository.findById(41L)).thenReturn(Optional.of(archived));
+            when(categoryRepository.existsByIdAndDeletedFalse(3L)).thenReturn(true);
+            when(bookRepository.existsByBookNumberAndStatusAndIdNot(1305, BookStatus.ACTIVE, 41L))
+                    .thenReturn(false);
+            when(bookRepository.saveAndFlush(archived)).thenReturn(archived);
+
+            bookService.restore(41L, new BookRestoreRequest(1305));
+
+            assertThat(archived.getBookNumber()).isEqualTo(1305);
+        }
+
+        @Test
+        void throwsWhenTheCopyIsAlreadyActive() {
+            Book active = book(41L, 1201, BookStatus.ACTIVE);
+            when(bookRepository.findById(41L)).thenReturn(Optional.of(active));
+
+            assertThatThrownBy(() -> bookService.restore(41L, null))
+                    .isInstanceOf(ApiException.class)
+                    .extracting(ex -> ((ApiException) ex).getErrorCode())
+                    .isEqualTo(ErrorCode.BOOK_NOT_REMOVED);
+
+            verify(bookRepository, never()).saveAndFlush(any());
+        }
+
+        @Test
+        void throwsNotFoundWhenTheCopyDoesNotExist() {
+            when(bookRepository.findById(99L)).thenReturn(Optional.empty());
+
+            assertThatThrownBy(() -> bookService.restore(99L, null))
+                    .isInstanceOf(ApiException.class)
+                    .extracting(ex -> ((ApiException) ex).getErrorCode())
+                    .isEqualTo(ErrorCode.BOOK_NOT_FOUND);
+        }
+
+        @Test
+        void throwsWhenTheCategoryHasSinceBeenArchived() {
+            Book archived = book(41L, 1201, BookStatus.LOST);
+            when(bookRepository.findById(41L)).thenReturn(Optional.of(archived));
+            when(categoryRepository.existsByIdAndDeletedFalse(3L)).thenReturn(false);
+
+            assertThatThrownBy(() -> bookService.restore(41L, null))
+                    .isInstanceOf(ApiException.class)
+                    .satisfies(thrown -> {
+                        ApiException ex = (ApiException) thrown;
+                        assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.CATEGORY_NOT_FOUND);
+                        // The situation is wrong, not a field on this request -- restore
+                        // has no categoryId in its payload.
+                        assertThat(ex.getField()).isNull();
+                    });
+
+            verify(bookRepository, never()).saveAndFlush(any());
+        }
+
+        @Test
+        void throwsWhenAnActiveBookAlreadyUsesTheNumber() {
+            Book archived = book(41L, 1201, BookStatus.LOST);
+            when(bookRepository.findById(41L)).thenReturn(Optional.of(archived));
+            when(categoryRepository.existsByIdAndDeletedFalse(3L)).thenReturn(true);
+            when(bookRepository.existsByBookNumberAndStatusAndIdNot(1201, BookStatus.ACTIVE, 41L))
+                    .thenReturn(true);
+
+            assertThatThrownBy(() -> bookService.restore(41L, null))
+                    .isInstanceOf(ApiException.class)
+                    .satisfies(thrown -> {
+                        ApiException ex = (ApiException) thrown;
+                        assertThat(ex.getErrorCode()).isEqualTo(ErrorCode.BOOK_NUMBER_TAKEN_ON_RESTORE);
+                        assertThat(ex.getField()).isEqualTo("bookNumber");
+                    });
+
+            verify(bookRepository, never()).saveAndFlush(any());
+        }
+
+        @Test
+        void checksTheSuppliedNumberRatherThanTheOriginalOnCollision() {
+            Book archived = book(41L, 1201, BookStatus.LOST);
+            when(bookRepository.findById(41L)).thenReturn(Optional.of(archived));
+            when(categoryRepository.existsByIdAndDeletedFalse(3L)).thenReturn(true);
+            when(bookRepository.existsByBookNumberAndStatusAndIdNot(1305, BookStatus.ACTIVE, 41L))
+                    .thenReturn(true);
+
+            assertThatThrownBy(() -> bookService.restore(41L, new BookRestoreRequest(1305)))
+                    .isInstanceOf(ApiException.class)
+                    .extracting(ex -> ((ApiException) ex).getErrorCode())
+                    .isEqualTo(ErrorCode.BOOK_NUMBER_TAKEN_ON_RESTORE);
+        }
+
+        @Test
+        void mapsAConcurrentUniqueIndexViolationOntoTheSameCode() {
+            Book archived = book(41L, 1201, BookStatus.LOST);
+            when(bookRepository.findById(41L)).thenReturn(Optional.of(archived));
+            when(categoryRepository.existsByIdAndDeletedFalse(3L)).thenReturn(true);
+            when(bookRepository.existsByBookNumberAndStatusAndIdNot(1201, BookStatus.ACTIVE, 41L))
+                    .thenReturn(false);
+            when(bookRepository.saveAndFlush(archived))
+                    .thenThrow(new DataIntegrityViolationException("ux_book_number_active"));
+
+            assertThatThrownBy(() -> bookService.restore(41L, null))
+                    .isInstanceOf(ApiException.class)
+                    .extracting(ex -> ((ApiException) ex).getErrorCode())
+                    .isEqualTo(ErrorCode.BOOK_NUMBER_TAKEN_ON_RESTORE);
         }
     }
 

@@ -18,6 +18,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import com.library.management.backend.book.dto.BookRemoveRequest;
 import com.library.management.backend.book.dto.BookRequest;
 import com.library.management.backend.book.dto.BookResponse;
+import com.library.management.backend.book.dto.BookRestoreRequest;
 import com.library.management.backend.common.dto.PagedResponse;
 import com.library.management.backend.common.error.ApiException;
 import com.library.management.backend.common.error.ErrorCode;
@@ -83,6 +84,21 @@ class BookControllerTest {
             false,
             Instant.parse("2026-01-12T10:00:00Z"),
             Instant.parse("2026-08-21T09:00:00Z"));
+
+    private static final BookResponse RESTORED = new BookResponse(
+            41L,
+            "Amintiri din copilărie",
+            "Ion Creangă",
+            1201,
+            3L,
+            "Fiction",
+            "Humanitas",
+            new BigDecimal("29.90"),
+            BookStatus.ACTIVE,
+            null,
+            false,
+            Instant.parse("2026-01-12T10:00:00Z"),
+            Instant.parse("2026-08-22T09:00:00Z"));
 
     @Autowired
     private MockMvc mockMvc;
@@ -165,6 +181,46 @@ class BookControllerTest {
         assertThat(pageable.getValue().getPageNumber()).isZero();
         assertThat(pageable.getValue().getPageSize()).isEqualTo(20);
         assertThat(pageable.getValue().getSort()).isEqualTo(Sort.by("title"));
+    }
+
+    @Test
+    void archivedListReturnsTheContractEnvelope() throws Exception {
+        when(bookService.listArchived(any(), any(), any(), any(Pageable.class)))
+                .thenReturn(new PagedResponse<>(List.of(REMOVED), 0, 20, 1L, 1));
+
+        mockMvc.perform(get("/api/books/archived"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath("$.content[0].status").value("LOST"))
+                .andExpect(jsonPath("$.content[0].removalNote").value("Not returned by member"));
+    }
+
+    @Test
+    void archivedListBindsSearchCategoryReasonAndPagingOntoTheService() throws Exception {
+        when(bookService.listArchived(any(), any(), any(), any(Pageable.class)))
+                .thenReturn(new PagedResponse<>(List.of(), 1, 5, 0L, 0));
+
+        mockMvc.perform(get("/api/books/archived")
+                        .param("search", "x")
+                        .param("categoryId", "3")
+                        .param("status", "LOST")
+                        .param("page", "1")
+                        .param("size", "5"))
+                .andExpect(status().isOk());
+
+        verify(bookService).listArchived(eq("x"), eq(3L), eq(RemovalReason.LOST), any(Pageable.class));
+    }
+
+    @Test
+    void archivedListRejectsActiveAsAReason() throws Exception {
+        // ACTIVE is not a constant of RemovalReason, so binding fails before the
+        // service is ever called -- same trick as BookRemoveRequest.
+        mockMvc.perform(get("/api/books/archived").param("status", "ACTIVE"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.field").value("status"));
+
+        verifyNoInteractions(bookService);
     }
 
     @Test
@@ -394,5 +450,75 @@ class BookControllerTest {
                         .content(REMOVE_JSON))
                 .andExpect(status().isNotFound())
                 .andExpect(jsonPath("$.code").value("BOOK_NOT_FOUND"));
+    }
+
+    @Test
+    void restoreReturns200WithTheReactivatedBookAndNoBodyRequired() throws Exception {
+        when(bookService.restore(eq(41L), any())).thenReturn(RESTORED);
+
+        mockMvc.perform(post("/api/books/41/restore"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(41))
+                .andExpect(jsonPath("$.status").value("ACTIVE"))
+                .andExpect(jsonPath("$.removalNote").isEmpty());
+
+        verify(bookService).restore(eq(41L), eq(null));
+    }
+
+    @Test
+    void restoreAcceptsAnOptionalNewNumber() throws Exception {
+        when(bookService.restore(eq(41L), any())).thenReturn(RESTORED);
+
+        mockMvc.perform(post("/api/books/41/restore")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookNumber\":1305}"))
+                .andExpect(status().isOk());
+
+        ArgumentCaptor<BookRestoreRequest> request = ArgumentCaptor.forClass(BookRestoreRequest.class);
+        verify(bookService).restore(eq(41L), request.capture());
+        assertThat(request.getValue().bookNumber()).isEqualTo(1305);
+    }
+
+    @Test
+    void restoreReturns409WhenAlreadyActive() throws Exception {
+        when(bookService.restore(eq(41L), any()))
+                .thenThrow(new ApiException(ErrorCode.BOOK_NOT_REMOVED));
+
+        mockMvc.perform(post("/api/books/41/restore"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("BOOK_NOT_REMOVED"));
+    }
+
+    @Test
+    void restoreReturns409WhenTheNumberIsTaken() throws Exception {
+        when(bookService.restore(eq(41L), any()))
+                .thenThrow(new ApiException(ErrorCode.BOOK_NUMBER_TAKEN_ON_RESTORE, "bookNumber"));
+
+        mockMvc.perform(post("/api/books/41/restore"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("BOOK_NUMBER_TAKEN_ON_RESTORE"))
+                .andExpect(jsonPath("$.field").value("bookNumber"));
+    }
+
+    @Test
+    void restoreReturns404WhenTheCategoryHasSinceBeenArchived() throws Exception {
+        when(bookService.restore(eq(41L), any()))
+                .thenThrow(new ApiException(ErrorCode.CATEGORY_NOT_FOUND));
+
+        mockMvc.perform(post("/api/books/41/restore"))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.code").value("CATEGORY_NOT_FOUND"));
+    }
+
+    @Test
+    void restoreRejectsANonPositiveNumber() throws Exception {
+        mockMvc.perform(post("/api/books/41/restore")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"bookNumber\":0}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.field").value("bookNumber"));
+
+        verify(bookService, never()).restore(any(), any());
     }
 }
