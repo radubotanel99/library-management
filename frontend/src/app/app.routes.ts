@@ -27,5 +27,10 @@ export const routes: Routes = [
     path: 'loans',
     loadComponent: () => import('./features/loan/loan-list/loan-list').then((m) => m.LoanList),
   },
+  {
+    path: 'settings',
+    loadComponent: () =>
+      import('./features/settings/settings-page/settings-page').then((m) => m.SettingsPage),
+  },
   { path: '**', redirectTo: 'categories' },
 ];

@@ -1,0 +1,52 @@
+<header class="header">
+  <h1>{{ 'settings.title' | translate }}</h1>
+</header>
+
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (loadFailed()) {
+  <div class="placeholder">
+    <p>{{ 'settings.loadError' | translate }}</p>
+    <button matButton (click)="load()">{{ 'common.retry' | translate }}</button>
+  </div>
+} @else if (!loading()) {
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'settings.daysToKeepABook.label' | translate }}</mat-label>
+      <input matInput formControlName="daysToKeepABook" inputmode="numeric" />
+      <mat-hint>{{ 'settings.daysToKeepABook.hint' | translate }}</mat-hint>
+      @if (form.controls.daysToKeepABook.hasError('required')) {
+        <mat-error>{{ 'validation.required' | translate }}</mat-error>
+      } @else if (form.controls.daysToKeepABook.hasError('pattern')) {
+        <mat-error>{{ 'error.PARAMETER_INVALID_VALUE' | translate }}</mat-error>
+      } @else if (form.controls.daysToKeepABook.hasError('min')) {
+        <mat-error>{{ 'validation.min' | translate: { min: parameterMin } }}</mat-error>
+      } @else if (form.controls.daysToKeepABook.hasError('server')) {
+        <mat-error>{{ 'validation.server' | translate }}</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline">
+      <mat-label>{{ 'settings.maxBooksPerMember.label' | translate }}</mat-label>
+      <input matInput formControlName="maxBooksPerMember" inputmode="numeric" />
+      <mat-hint>{{ 'settings.maxBooksPerMember.hint' | translate }}</mat-hint>
+      @if (form.controls.maxBooksPerMember.hasError('required')) {
+        <mat-error>{{ 'validation.required' | translate }}</mat-error>
+      } @else if (form.controls.maxBooksPerMember.hasError('pattern')) {
+        <mat-error>{{ 'error.PARAMETER_INVALID_VALUE' | translate }}</mat-error>
+      } @else if (form.controls.maxBooksPerMember.hasError('min')) {
+        <mat-error>{{ 'validation.min' | translate: { min: parameterMin } }}</mat-error>
+      } @else if (form.controls.maxBooksPerMember.hasError('server')) {
+        <mat-error>{{ 'validation.server' | translate }}</mat-error>
+      }
+    </mat-form-field>
+
+    <div class="actions">
+      <button matButton="filled" type="submit" [disabled]="saving()">
+        {{ 'common.save' | translate }}
+      </button>
+    </div>
+  </form>
+}

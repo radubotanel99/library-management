@@ -20,6 +20,7 @@ import java.util.EnumSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -45,6 +46,7 @@ import org.springframework.transaction.annotation.Transactional;
  */
 @Service
 @Transactional(readOnly = true)
+@Slf4j
 public class LoanService {
 
     /**
@@ -236,6 +238,40 @@ public class LoanService {
         loan.setFinishedAt(Instant.now(clock));
 
         return toResponse(loanRepository.save(loan));
+    }
+
+    /**
+     * Brings the stored {@code state} column back in line with the dates
+     * ({@code API_CONTRACT.md} §11).
+     *
+     * <p>Called from two places, neither of which is a request: a daily scheduled job,
+     * so a loan that quietly came due overnight is flagged; and immediately after the
+     * lending period is saved, so raising it from 14 to 21 days flips affected loans
+     * back out of {@code LATE} at once ({@code DATA_MODEL.md} §6). Both directions run
+     * every time -- a single sweep cannot know which way the parameter moved, and
+     * running the pair is two indexed statements.
+     *
+     * <p><strong>This keeps a cache warm; it does not decide anything.</strong> The
+     * answer to "is this loan late?" is and remains
+     * {@link #toResponse(Loan, Instant, int)}'s date arithmetic, which is recomputed on
+     * every read and is therefore never stale. The column exists for the things a
+     * derivation cannot serve -- {@code ix_loan_state}, reporting, and anyone reading
+     * the table directly -- and between two runs of this method it is simply out of
+     * date. Nothing may start trusting it because this method now writes it.
+     *
+     * <p>The cut-off is computed here rather than shared with {@link #list}: that
+     * method deliberately reads the lending period exactly once per page, and routing
+     * it through a common helper would make it read twice. One line of duplicated
+     * arithmetic is the cheaper of the two.
+     */
+    @Transactional
+    public void reevaluateOverdue() {
+        Instant cutOff = Instant.now(clock).minus(settingsService.getDaysToKeepABook(), ChronoUnit.DAYS);
+
+        int markedLate = loanRepository.markLateBorrowedBefore(cutOff);
+        int markedActive = loanRepository.markActiveBorrowedFrom(cutOff);
+
+        log.info("Overdue re-evaluation: {} loan(s) marked LATE, {} marked ACTIVE", markedLate, markedActive);
     }
 
     private Loan requireById(Long id) {

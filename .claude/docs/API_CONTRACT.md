@@ -332,11 +332,11 @@ The borrow date is set server-side — **never** supplied by the client.
 ]
 ```
 
-`PUT` accepts the full set and saves them in **one transaction** — a partial save could leave the library in a half-configured state.
+`PUT` accepts the full set and saves them in **one transaction** — a partial save could leave the library in a half-configured state. The request must contain exactly the known parameter keys (`DAYS_TO_KEEP_A_BOOK`, `MAX_BOOKS_PER_MEMBER`) — a missing key, an unrecognised key, or a duplicate key is rejected with `PARAMETER_INVALID_VALUE` rather than partially applied.
 
-Values are strings on the wire (matching storage); the backend validates each as a positive integer and rejects the whole request otherwise.
+Values are strings on the wire (matching storage); the backend validates each as a positive integer (no upper bound) and rejects the whole request otherwise. On `PARAMETER_INVALID_VALUE`, `field` is the offending parameter's `key` (e.g. `"DAYS_TO_KEEP_A_BOOK"`) rather than a JSON path, since the request body is an array — this lets the frontend highlight the right input.
 
-**Saving parameters immediately triggers loan re-evaluation** (§11) so `ACTIVE`/`LATE` states reflect the new rule without waiting for the scheduler.
+**Saving parameters immediately triggers loan re-evaluation** (§11) **in the same transaction** — if re-evaluation fails, the parameter save rolls back too, so settings and loan state can never disagree.
 
 Language is **not** a parameter — it lives in browser `localStorage`.
 

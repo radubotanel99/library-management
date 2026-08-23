@@ -12,6 +12,7 @@ export const en = {
   'nav.archive': 'Archive',
   'nav.members': 'Members',
   'nav.loans': 'Loans',
+  'nav.settings': 'Settings',
 
   'common.language': 'Language',
   'common.actions': 'Actions',
@@ -143,6 +144,18 @@ export const en = {
   'loan.return.message': 'Record "{{title}}" as returned by {{member}}?',
   'loan.return.confirm': 'Return',
 
+  'settings.title': 'Settings',
+  'settings.loadError': 'The settings could not be loaded.',
+  'settings.saveSuccess': 'The settings have been saved.',
+  'settings.daysToKeepABook.label': 'Days a book may be kept',
+  // Due dates are computed, never stored (`DATA_MODEL.md` §6), so a change here
+  // applies to loans that are already running.
+  'settings.daysToKeepABook.hint':
+    'Applies to open loans as well: raising it immediately makes affected overdue loans active again.',
+  'settings.maxBooksPerMember.label': 'Books a member may hold',
+  'settings.maxBooksPerMember.hint':
+    'Checked when lending. Members already over the new limit keep the books they have.',
+
   'validation.required': 'This field is required.',
   'validation.maxLength': 'Use at most {{max}} characters.',
   'validation.min': 'Use a value of at least {{min}}.',
@@ -165,6 +178,7 @@ export const en = {
   'error.BOOK_ALREADY_ON_LOAN': 'This book is already on loan.',
   'error.LOAN_ALREADY_FINISHED': 'This loan has already been returned.',
   'error.LOAN_NOT_FOUND': 'This loan no longer exists.',
+  'error.PARAMETER_INVALID_VALUE': 'This value must be a positive whole number.',
   'error.VALIDATION_ERROR': 'Some of the submitted data is not valid.',
   'error.RESOURCE_NOT_FOUND': 'The requested resource was not found.',
   'error.DATA_INTEGRITY_VIOLATION': 'The change conflicts with existing data.',

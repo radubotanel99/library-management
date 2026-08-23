@@ -9,6 +9,7 @@ import java.util.Set;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
@@ -155,4 +156,69 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
                       @Param("pattern") String pattern,
                       @Param("searchNumber") Integer searchNumber,
                       Pageable pageable);
+
+    /**
+     * Marks every open loan borrowed before {@code cutOff} as {@code LATE}
+     * ({@code API_CONTRACT.md} §11).
+     *
+     * <p>The cut-off is {@code now - DAYS_TO_KEEP_A_BOOK}, so "borrowed strictly
+     * before it" is exactly the condition {@code LoanService.toResponse} uses to
+     * derive a late state. Strict {@code <} matches that derivation: a loan borrowed
+     * exactly on the cut-off comes due this instant but is not yet overdue.
+     *
+     * <p>A bulk {@code update} rather than load-then-save, on purpose. Loading every
+     * open loan to flip one column would pull entities into the persistence context
+     * and, because {@link Loan} is audited, stamp {@code updated_at} on each one --
+     * and a system correction is not a staff edit. The bulk statement bypasses both.
+     * {@code clearAutomatically} then empties the persistence context, so nothing
+     * already loaded in the same transaction keeps a stale in-memory {@code state}.
+     *
+     * <p>Only rows currently {@code ACTIVE} are touched. Restricting the {@code where}
+     * to the one starting state -- rather than {@code state <> 'LATE'} -- is what keeps
+     * {@code FINISHED} out of it: returned loans are history and must never be
+     * reopened, whatever their borrow date says.
+     *
+     * <p>{@code ux_loan_one_open_per_book} needs no special handling here. Its
+     * predicate covers {@code state in ('ACTIVE', 'LATE')}, so a row flipping between
+     * the two stays inside the index the whole time and no uniqueness check changes
+     * outcome.
+     *
+     * @param cutOff borrow instant at or after which a loan is still in time
+     * @return how many loans were flipped
+     */
+    @Modifying(clearAutomatically = true)
+    @Query("""
+            update Loan l
+            set l.state = com.library.management.backend.loan.LoanState.LATE
+            where l.state = com.library.management.backend.loan.LoanState.ACTIVE
+              and l.createdAt < :cutOff
+            """)
+    int markLateBorrowedBefore(@Param("cutOff") Instant cutOff);
+
+    /**
+     * Marks every loan currently flagged {@code LATE} but borrowed on or after
+     * {@code cutOff} back as {@code ACTIVE} ({@code API_CONTRACT.md} §11).
+     *
+     * <p>The other direction of the same comparison, and the reason the job exists at
+     * all rather than a one-way "mark overdue" sweep: raising
+     * {@code DAYS_TO_KEEP_A_BOOK} moves the cut-off backwards, and loans that were
+     * late under the old period are simply not late any more
+     * ({@code DATA_MODEL.md} §6). {@code >=} is the exact complement of
+     * {@link #markLateBorrowedBefore}'s {@code <}, so the two can never both claim the
+     * same row and never both skip one.
+     *
+     * <p>Same bulk-update reasoning, same {@code FINISHED} exclusion, and the same
+     * lack of any interaction with {@code ux_loan_one_open_per_book} as above.
+     *
+     * @param cutOff borrow instant at or after which a loan is still in time
+     * @return how many loans were flipped
+     */
+    @Modifying(clearAutomatically = true)
+    @Query("""
+            update Loan l
+            set l.state = com.library.management.backend.loan.LoanState.ACTIVE
+            where l.state = com.library.management.backend.loan.LoanState.LATE
+              and l.createdAt >= :cutOff
+            """)
+    int markActiveBorrowedFrom(@Param("cutOff") Instant cutOff);
 }

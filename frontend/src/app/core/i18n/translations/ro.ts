@@ -14,6 +14,7 @@ export const ro: Record<TranslationKey, string> = {
   'nav.archive': 'Arhivă',
   'nav.members': 'Membri',
   'nav.loans': 'Împrumuturi',
+  'nav.settings': 'Setări',
 
   'common.language': 'Limbă',
   'common.actions': 'Acțiuni',
@@ -143,6 +144,16 @@ export const ro: Record<TranslationKey, string> = {
   'loan.return.message': 'Înregistrezi „{{title}}” ca returnată de {{member}}?',
   'loan.return.confirm': 'Returnează',
 
+  'settings.title': 'Setări',
+  'settings.loadError': 'Setările nu au putut fi încărcate.',
+  'settings.saveSuccess': 'Setările au fost salvate.',
+  'settings.daysToKeepABook.label': 'Zile în care o carte poate fi păstrată',
+  'settings.daysToKeepABook.hint':
+    'Se aplică și împrumuturilor în curs: dacă valoarea crește, împrumuturile întârziate afectate redevin imediat în curs.',
+  'settings.maxBooksPerMember.label': 'Cărți pe care le poate avea un membru',
+  'settings.maxBooksPerMember.hint':
+    'Se verifică la împrumut. Membrii care depășesc deja noua limită păstrează cărțile împrumutate.',
+
   'validation.required': 'Acest câmp este obligatoriu.',
   'validation.maxLength': 'Folosește cel mult {{max}} caractere.',
   'validation.min': 'Folosește o valoare de cel puțin {{min}}.',
@@ -166,6 +177,7 @@ export const ro: Record<TranslationKey, string> = {
   'error.BOOK_ALREADY_ON_LOAN': 'Această carte este deja împrumutată.',
   'error.LOAN_ALREADY_FINISHED': 'Acest împrumut a fost deja returnat.',
   'error.LOAN_NOT_FOUND': 'Acest împrumut nu mai există.',
+  'error.PARAMETER_INVALID_VALUE': 'Valoarea trebuie să fie un număr întreg pozitiv.',
   'error.VALIDATION_ERROR': 'O parte dintre datele trimise nu sunt valide.',
   'error.RESOURCE_NOT_FOUND': 'Resursa cerută nu a fost găsită.',
   'error.DATA_INTEGRITY_VIOLATION': 'Modificarea intră în conflict cu datele existente.',

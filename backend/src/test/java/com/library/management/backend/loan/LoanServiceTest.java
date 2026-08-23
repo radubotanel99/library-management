@@ -1,6 +1,7 @@
 package com.library.management.backend.loan;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatCode;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
@@ -486,6 +487,66 @@ class LoanServiceTest {
                     .isInstanceOf(ApiException.class)
                     .extracting(ex -> ((ApiException) ex).getErrorCode())
                     .isEqualTo(ErrorCode.LOAN_NOT_FOUND);
+        }
+    }
+
+    @Nested
+    @DisplayName("reevaluateOverdue")
+    class ReevaluateOverdue {
+
+        private void stubBothSweeps(int markedLate, int markedActive) {
+            when(loanRepository.markLateBorrowedBefore(any())).thenReturn(markedLate);
+            when(loanRepository.markActiveBorrowedFrom(any())).thenReturn(markedActive);
+        }
+
+        @Test
+        void sweepsBothDirectionsFromTheSameCutOff() {
+            // Both run every time: the job cannot know which way the lending period
+            // moved, and a one-way sweep would never undo a LATE flag.
+            stubLendingPeriod();
+            stubBothSweeps(4, 2);
+
+            loanService.reevaluateOverdue();
+
+            verify(loanRepository).markLateBorrowedBefore(CUT_OFF);
+            verify(loanRepository).markActiveBorrowedFrom(CUT_OFF);
+        }
+
+        @Test
+        void movesTheCutOffWithTheConfiguredLendingPeriod() {
+            // Raising the period moves the cut-off backwards, which is exactly what
+            // flips loans back out of LATE.
+            when(settingsService.getDaysToKeepABook()).thenReturn(21);
+            stubBothSweeps(0, 3);
+
+            loanService.reevaluateOverdue();
+
+            Instant expected = NOW.minus(21, ChronoUnit.DAYS);
+            verify(loanRepository).markLateBorrowedBefore(expected);
+            verify(loanRepository).markActiveBorrowedFrom(expected);
+        }
+
+        @Test
+        void doesNothingElseToTheRepository() {
+            // No load-then-save: the flip is two bulk statements, so nothing is
+            // fetched and nothing is saved (which would stamp updated_at).
+            stubLendingPeriod();
+            stubBothSweeps(1, 1);
+
+            loanService.reevaluateOverdue();
+
+            verify(loanRepository, never()).save(any());
+            verify(loanRepository, never()).saveAndFlush(any());
+            verify(loanRepository, never()).search(
+                    any(), any(), any(), any(), any(), any(), any(), any());
+        }
+
+        @Test
+        void succeedsWhenThereIsNothingToFlip() {
+            stubLendingPeriod();
+            stubBothSweeps(0, 0);
+
+            assertThatCode(() -> loanService.reevaluateOverdue()).doesNotThrowAnyException();
         }
     }
 
