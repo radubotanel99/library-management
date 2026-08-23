@@ -10,3 +10,6 @@ Thumbs.db
 .idea/
 *.iml
 .vscode/
+
+# Angular (when ng commands are run from repo root instead of /frontend)
+.angular/
