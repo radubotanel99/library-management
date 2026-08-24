@@ -349,13 +349,9 @@ Language is **not** a parameter — it lives in browser `localStorage`.
 ```json
 {
   "totalCopies": 137,
-  "totalTitles": 118,
   "totalMembers": 64,
   "loansActive": 23,
   "loansOverdue": 4,
-  "booksLost": 3,
-  "booksDamaged": 2,
-  "booksWithdrawn": 7,
   "mostBorrowed": [
     { "bookId": 41, "title": "Amintiri din copilărie", "author": "Ion Creangă", "loanCount": 18 }
   ]
@@ -363,8 +359,8 @@ Language is **not** a parameter — it lives in browser `localStorage`.
 ```
 
 - `totalCopies` counts `ACTIVE` books only — a lost book is not held.
-- `totalTitles` counts distinct `(title, author)` pairs among active books. **An approximation** — inconsistent data entry inflates it (`DATA_MODEL.md` §11).
-- `mostBorrowed` returns the top 5 by all-time loan count.
+- `loansActive` / `loansOverdue` are **derived live** from `createdAt + DAYS_TO_KEEP_A_BOOK` vs. now, the same way the loans list computes them (§7) — never read off the stored `loan.state` column, which is only as fresh as the last scheduler run (§11). This keeps the dashboard from disagreeing with the loans screen, and makes `loansOverdue` react immediately to a `DAYS_TO_KEEP_A_BOOK` change rather than waiting for the next scheduled re-evaluation.
+- `mostBorrowed` returns the top 5 by all-time loan count (all loan states count, including returned ones), restricted to currently `ACTIVE` books — a removed book does not occupy a slot on this operational screen even if its lending history was high. Ties are broken by `book.id` ascending, so the 5th slot doesn't change between refreshes of an unchanged database.
 
 One endpoint rather than several, because the dashboard renders as a unit.
 

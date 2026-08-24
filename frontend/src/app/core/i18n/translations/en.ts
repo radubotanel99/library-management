@@ -7,6 +7,7 @@
 export const en = {
   'app.title': 'Library Management',
 
+  'nav.dashboard': 'Dashboard',
   'nav.categories': 'Categories',
   'nav.books': 'Books',
   'nav.archive': 'Archive',
@@ -28,6 +29,20 @@ export const en = {
 
   'lang.en': 'English',
   'lang.ro': 'Romanian',
+
+  'dashboard.title': 'Dashboard',
+  'dashboard.loadError': 'The dashboard could not be loaded.',
+  // "Held" rather than "owned": lost, damaged and withdrawn copies are excluded
+  // (`DATA_MODEL.md` §4.1).
+  'dashboard.totalCopies': 'Copies held',
+  'dashboard.totalMembers': 'Members',
+  'dashboard.loansActive': 'Books on loan',
+  'dashboard.loansOverdue': 'Overdue',
+  'dashboard.mostBorrowed.title': 'Most borrowed',
+  'dashboard.mostBorrowed.empty': 'Nothing has been borrowed yet.',
+  'dashboard.mostBorrowed.column.title': 'Title',
+  'dashboard.mostBorrowed.column.author': 'Author',
+  'dashboard.mostBorrowed.column.loanCount': 'Times borrowed',
 
   'category.list.title': 'Categories',
   'category.list.empty': 'No categories yet. Add the first one to get started.',

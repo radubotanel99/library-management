@@ -69,6 +69,69 @@ public interface LoanRepository extends JpaRepository<Loan, Long> {
     long countByMemberIdAndStateIn(Long memberId, Collection<LoanState> states);
 
     /**
+     * How many open loans are still in time, for the dashboard
+     * ({@code API_CONTRACT.md} §10).
+     *
+     * <p><strong>{@code states} is only ever the open/finished split, never the
+     * {@code ACTIVE}/{@code LATE} one.</strong> The stored column is as fresh as the
+     * last re-evaluation run, so counting {@code state = 'ACTIVE'} would answer from
+     * a value that is simply wrong between a change to {@code DAYS_TO_KEEP_A_BOOK}
+     * and the next sweep, and the dashboard would disagree with the loans screen.
+     * Callers pass {@link #OPEN_STATES} and let the date decide -- the same rule
+     * {@link #search} and {@code LoanService.toResponse} follow.
+     *
+     * <p>{@code >=} is deliberate and is the exact complement of
+     * {@link #countByStateInAndCreatedAtBefore}: a loan borrowed exactly on the
+     * cut-off comes due this instant but is not yet overdue, so it is counted here.
+     *
+     * @param cutOff borrow instant at or after which a loan is still in time
+     */
+    long countByStateInAndCreatedAtGreaterThanEqual(Collection<LoanState> states, Instant cutOff);
+
+    /**
+     * How many open loans are overdue, for the dashboard
+     * ({@code API_CONTRACT.md} §10).
+     *
+     * <p>The other side of the same comparison, with the same restriction on
+     * {@code states}: it narrows to loans that are still out, and lateness is then a
+     * date comparison rather than a read of the possibly stale {@code state} column.
+     *
+     * <p>Strict {@code <} rather than {@code <=}, matching
+     * {@link #markLateBorrowedBefore} and {@code LoanService}'s derivation, so the
+     * two counts partition the open loans exactly: no loan is in both, none in
+     * neither.
+     *
+     * @param cutOff borrow instant at or after which a loan is still in time
+     */
+    long countByStateInAndCreatedAtBefore(Collection<LoanState> states, Instant cutOff);
+
+    /**
+     * The most-borrowed active books, most first ({@code API_CONTRACT.md} §10).
+     *
+     * <p><strong>There is deliberately no {@code state} filter.</strong> Every other
+     * query in this interface narrows by state; this one counts popularity over a
+     * book's whole life, so a returned ({@code FINISHED}) loan counts exactly as much
+     * as one still out. The omission is the rule, not an oversight.
+     *
+     * <p>The books, on the other hand, <em>are</em> filtered: only {@code ACTIVE}
+     * copies appear. A removed book does not occupy a slot on an operational screen
+     * however good its history was -- a librarian cannot lend it.
+     *
+     * <p>{@code b.id} breaks ties, so the last slot does not shuffle between two
+     * refreshes of an unchanged database. The caller supplies the page size, because
+     * "top 5" is a contract number rather than a property of the query.
+     */
+    @Query("""
+            select new com.library.management.backend.loan.MostBorrowedBook(b.id, b.title, b.author, count(l))
+            from Loan l
+            join l.book b
+            where b.status = com.library.management.backend.book.BookStatus.ACTIVE
+            group by b.id, b.title, b.author
+            order by count(l) desc, b.id asc
+            """)
+    List<MostBorrowedBook> findMostBorrowed(Pageable pageable);
+
+    /**
      * One loan with its book and member already loaded.
      *
      * <p>{@code LoanResponse} denormalises title, author, number and member name, so

@@ -19,6 +19,15 @@ public interface MemberRepository extends JpaRepository<Member, Long> {
 
     Optional<Member> findByIdAndDeletedFalse(Long id);
 
+    /**
+     * How many people the library has on its books, for the dashboard
+     * ({@code API_CONTRACT.md} §10).
+     *
+     * <p>Archived members are excluded like everywhere else here: they exist only
+     * to keep old loan history resolvable and are not members any more.
+     */
+    long countByDeletedFalse();
+
     boolean existsByNameIgnoreCaseAndDeletedFalse(String name);
 
     /** Duplicate check for updates: the member being edited is not its own duplicate. */

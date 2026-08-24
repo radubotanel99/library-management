@@ -1,0 +1,65 @@
+:host {
+  display: block;
+  padding: 1.5rem;
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.header h1 {
+  font: var(--mat-sys-headline-small);
+  margin: 0;
+}
+
+.placeholder {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 3rem 1rem;
+  color: var(--mat-sys-on-surface-variant);
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  gap: 1rem;
+}
+
+.stat-value {
+  font: var(--mat-sys-display-small);
+  margin: 0;
+}
+
+.stat-label {
+  font: var(--mat-sys-body-medium);
+  color: var(--mat-sys-on-surface-variant);
+  margin: 0.25rem 0 0;
+}
+
+/* Overdue loans are the one figure that asks for action, so it is the one tile
+   that changes colour — and only when there is something to act on. */
+.overdue-card .stat-value {
+  color: var(--mat-sys-error);
+}
+
+.most-borrowed {
+  margin-top: 2rem;
+}
+
+.most-borrowed h2 {
+  font: var(--mat-sys-title-medium);
+  margin: 0 0 0.5rem;
+}
+
+table {
+  width: 100%;
+}
+
+.numeric-cell {
+  text-align: end;
+}

@@ -299,21 +299,7 @@ One value conversion is needed: `BOOK.deleted = 0` maps to `status = 'ACTIVE'`, 
 
 ---
 
-## 11. Dashboard queries — note on "titles vs copies"
-
-The dashboard reports both *copies* and *distinct titles*. Because a book row is a copy and there is no separate title entity, distinct titles are derived:
-
-```sql
-SELECT COUNT(*) FROM book WHERE status = 'ACTIVE';                     -- copies
-SELECT COUNT(DISTINCT (lower(title), lower(author)))
-  FROM book WHERE status = 'ACTIVE';                                   -- titles
-```
-
-Grouping on `(title, author)` rather than title alone avoids merging two different books that share a title. This is an approximation — inconsistent data entry ("Ion Creangă" vs "I. Creanga") will count as two titles. Acceptable for v1; a proper `title` entity is the fix if it ever matters.
-
----
-
-## 12. Migrations
+## 11. Migrations
 
 | File | Contents |
 |---|---|
@@ -328,7 +314,7 @@ Rules:
 
 ---
 
-## 13. Deferred — not in v1
+## 12. Deferred — not in v1
 
 Recorded so the shape is known, but **not built now**:
 
@@ -336,5 +322,6 @@ Recorded so the shape is known, but **not built now**:
 - **`member.max_books_override`** (nullable) — per-member borrowing limit; the global parameter stays the default.
 - **`loan.due_at_override`** (nullable) — per-loan extension.
 - **Reservations**, **notification log** — see Functional Spec §15.
+- **Distinct-title count and lost/damaged/withdrawn breakdown on the dashboard** — `totalTitles` required an approximate `(title, author)` grouping with no clean fix short of a `title` entity; the removed-book breakdown is already visible on the archive screen. Both dropped from `GET /api/dashboard` to keep the endpoint to figures the archive/catalogue screens don't already cover. Add back if requested.
 
 Each is additive: a new nullable column or a new table, with no restructuring of what is built now.

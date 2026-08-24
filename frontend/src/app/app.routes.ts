@@ -1,7 +1,12 @@
 import { Routes } from '@angular/router';
 
 export const routes: Routes = [
-  { path: '', redirectTo: 'categories', pathMatch: 'full' },
+  { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
+  {
+    path: 'dashboard',
+    loadComponent: () =>
+      import('./features/dashboard/dashboard-page/dashboard-page').then((m) => m.DashboardPage),
+  },
   {
     path: 'categories',
     loadComponent: () =>
@@ -32,5 +37,5 @@ export const routes: Routes = [
     loadComponent: () =>
       import('./features/settings/settings-page/settings-page').then((m) => m.SettingsPage),
   },
-  { path: '**', redirectTo: 'categories' },
+  { path: '**', redirectTo: 'dashboard' },
 ];

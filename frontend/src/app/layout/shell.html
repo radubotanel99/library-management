@@ -2,6 +2,10 @@
   <span class="title">{{ 'app.title' | translate }}</span>
 
   <nav>
+    <!-- First, and the landing route: it is the screen a shift starts on. -->
+    <a matButton routerLink="/dashboard" routerLinkActive="active-link">
+      {{ 'nav.dashboard' | translate }}
+    </a>
     <a
       matButton
       routerLink="/books"

@@ -1,0 +1,97 @@
+<header class="header">
+  <h1>{{ 'dashboard.title' | translate }}</h1>
+</header>
+
+@if (loading()) {
+  <mat-progress-bar mode="indeterminate" />
+}
+
+@if (loadFailed()) {
+  <div class="placeholder">
+    <p>{{ 'dashboard.loadError' | translate }}</p>
+    <button matButton (click)="load()">{{ 'common.retry' | translate }}</button>
+  </div>
+} @else if (!loading() && stats(); as data) {
+  <section class="stats">
+    <!--
+      Active copies only: a lost or withdrawn book is on the archive screen, not
+      on the shelf (`DATA_MODEL.md` §4.1).
+    -->
+    <mat-card appearance="outlined">
+      <mat-card-content>
+        <p class="stat-value">{{ data.totalCopies }}</p>
+        <p class="stat-label">{{ 'dashboard.totalCopies' | translate }}</p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined">
+      <mat-card-content>
+        <p class="stat-value">{{ data.totalMembers }}</p>
+        <p class="stat-label">{{ 'dashboard.totalMembers' | translate }}</p>
+      </mat-card-content>
+    </mat-card>
+
+    <!--
+      Both loan figures are taken exactly as the server sends them. They are
+      derived from the current DAYS_TO_KEEP_A_BOOK rather than from the stored
+      `loan.state` column (`API_CONTRACT.md` §10), so recomputing either here
+      would only reintroduce the staleness the backend just removed.
+    -->
+    <mat-card appearance="outlined">
+      <mat-card-content>
+        <p class="stat-value">{{ data.loansActive }}</p>
+        <p class="stat-label">{{ 'dashboard.loansActive' | translate }}</p>
+      </mat-card-content>
+    </mat-card>
+
+    <mat-card appearance="outlined" [class.overdue-card]="data.loansOverdue > 0">
+      <mat-card-content>
+        <p class="stat-value">{{ data.loansOverdue }}</p>
+        <p class="stat-label">{{ 'dashboard.loansOverdue' | translate }}</p>
+      </mat-card-content>
+    </mat-card>
+  </section>
+
+  <section class="most-borrowed">
+    <h2>{{ 'dashboard.mostBorrowed.title' | translate }}</h2>
+
+    <!-- A library that has lent nothing yet is a real state, not an edge case. -->
+    @if (mostBorrowed().length === 0) {
+      <div class="placeholder">
+        <p>{{ 'dashboard.mostBorrowed.empty' | translate }}</p>
+      </div>
+    } @else {
+      <table mat-table [dataSource]="mostBorrowed()">
+        <!--
+          Title and author, never the book number: a number is unique only among
+          active copies, so it does not identify a book to a human
+          (`DATA_MODEL.md` §4).
+        -->
+        <ng-container matColumnDef="title">
+          <th mat-header-cell *matHeaderCellDef>
+            {{ 'dashboard.mostBorrowed.column.title' | translate }}
+          </th>
+          <td mat-cell *matCellDef="let book">{{ book.title }}</td>
+        </ng-container>
+
+        <ng-container matColumnDef="author">
+          <th mat-header-cell *matHeaderCellDef>
+            {{ 'dashboard.mostBorrowed.column.author' | translate }}
+          </th>
+          <td mat-cell *matCellDef="let book">{{ book.author }}</td>
+        </ng-container>
+
+        <!-- All-time, and returned loans count towards it too. -->
+        <ng-container matColumnDef="loanCount">
+          <th mat-header-cell *matHeaderCellDef>
+            {{ 'dashboard.mostBorrowed.column.loanCount' | translate }}
+          </th>
+          <td mat-cell *matCellDef="let book" class="numeric-cell">{{ book.loanCount }}</td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        <tr mat-row *matRowDef="let row; columns: displayedColumns"></tr>
+      </table>
+    }
+  </section>
+}

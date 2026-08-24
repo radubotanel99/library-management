@@ -25,6 +25,16 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     long countByCategoryIdAndStatus(Long categoryId, BookStatus status);
 
+    /**
+     * How many copies the library actually holds, for the dashboard
+     * ({@code API_CONTRACT.md} §10).
+     *
+     * <p>Takes a status rather than assuming {@code ACTIVE} like everything else
+     * here: "copies held" is {@code ACTIVE} only -- a lost or withdrawn copy is on
+     * the archive screen, not on the shelf.
+     */
+    long countByStatus(BookStatus status);
+
     Optional<Book> findByBookNumberAndStatus(Integer bookNumber, BookStatus status);
 
     boolean existsByBookNumberAndStatus(Integer bookNumber, BookStatus status);

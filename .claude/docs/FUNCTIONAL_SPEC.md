@@ -132,12 +132,13 @@ Changes take effect immediately, and loans affected by a new setting are re-eval
 
 The home screen gives an at-a-glance picture the moment staff arrive:
 
-- **Collection size** — titles and physical copies held.
+- **Collection size** — physical copies held.
 - **Currently on loan** — books out right now.
 - **Overdue count** — loans needing attention.
 - **Membership** — registered members.
-- **Removed books** — how many are recorded as lost, damaged, or withdrawn.
 - **Popularity** — the most frequently borrowed books.
+
+Removed books (lost, damaged, withdrawn) are tracked on the archive screen (§4), not the dashboard.
 
 ## 11. Search & Filtering
 

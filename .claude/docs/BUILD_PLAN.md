@@ -131,7 +131,7 @@ Frontend: a small settings screen with validation.
 
 **Goal:** the home screen from §10 of the spec.
 
-Backend: a single `GET /api/dashboard` with efficient aggregate queries — counts must not load entities into memory.
+Backend: a single `GET /api/dashboard` — `totalCopies`, `totalMembers`, `loansActive`, `loansOverdue`, `mostBorrowed` (top 5) — with efficient aggregate queries; counts must not load entities into memory. No distinct-title count and no lost/damaged/withdrawn breakdown — the latter is already on the archive screen (`API_CONTRACT.md` §10, `DATA_MODEL.md` §12).
 
 Frontend: stat cards plus a most-borrowed list, replacing the empty landing page.
 

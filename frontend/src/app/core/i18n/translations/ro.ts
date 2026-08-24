@@ -9,6 +9,7 @@ import { TranslationKey } from './translation-key';
 export const ro: Record<TranslationKey, string> = {
   'app.title': 'Gestiune bibliotecă',
 
+  'nav.dashboard': 'Panou',
   'nav.categories': 'Categorii',
   'nav.books': 'Cărți',
   'nav.archive': 'Arhivă',
@@ -30,6 +31,18 @@ export const ro: Record<TranslationKey, string> = {
 
   'lang.en': 'Engleză',
   'lang.ro': 'Română',
+
+  'dashboard.title': 'Panou',
+  'dashboard.loadError': 'Panoul nu a putut fi încărcat.',
+  'dashboard.totalCopies': 'Cărți în colecție',
+  'dashboard.totalMembers': 'Membri',
+  'dashboard.loansActive': 'Cărți împrumutate',
+  'dashboard.loansOverdue': 'Întârziate',
+  'dashboard.mostBorrowed.title': 'Cele mai împrumutate',
+  'dashboard.mostBorrowed.empty': 'Nu a fost împrumutată încă nicio carte.',
+  'dashboard.mostBorrowed.column.title': 'Titlu',
+  'dashboard.mostBorrowed.column.author': 'Autor',
+  'dashboard.mostBorrowed.column.loanCount': 'Împrumuturi',
 
   'category.list.title': 'Categorii',
   'category.list.empty': 'Nu există categorii. Adaugă prima categorie pentru a începe.',
