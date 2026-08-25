@@ -1,11 +1,11 @@
 <mat-toolbar color="primary">
-  <span class="title">{{ 'app.title' | translate }}</span>
+  <a class="title" routerLink="/dashboard">{{ 'app.title' | translate }}</a>
 
   <nav>
     <!-- First, and the landing route: it is the screen a shift starts on. -->
-    <a matButton routerLink="/dashboard" routerLinkActive="active-link">
-      {{ 'nav.dashboard' | translate }}
-    </a>
+<!--    <a matButton routerLink="/dashboard" routerLinkActive="active-link">-->
+<!--      {{ 'nav.dashboard' | translate }}-->
+<!--    </a>-->
     <a
       matButton
       routerLink="/books"
@@ -13,9 +13,6 @@
       [routerLinkActiveOptions]="{ exact: true }"
     >
       {{ 'nav.books' | translate }}
-    </a>
-    <a matButton routerLink="/books/archive" routerLinkActive="active-link">
-      {{ 'nav.archive' | translate }}
     </a>
     <a matButton routerLink="/categories" routerLinkActive="active-link">
       {{ 'nav.categories' | translate }}
@@ -26,28 +23,14 @@
     <a matButton routerLink="/loans" routerLinkActive="active-link">
       {{ 'nav.loans' | translate }}
     </a>
-    <a matButton routerLink="/settings" routerLinkActive="active-link">
-      {{ 'nav.settings' | translate }}
-    </a>
   </nav>
 
   <span class="spacer"></span>
 
-  <button
-    matButton
-    [matMenuTriggerFor]="languageMenu"
-    [attr.aria-label]="'common.language' | translate"
-  >
-    <mat-icon>language</mat-icon>
-    {{ langLabel(lang()) | translate }}
-  </button>
-  <mat-menu #languageMenu="matMenu">
-    @for (option of langs; track option) {
-      <button mat-menu-item [disabled]="option === lang()" (click)="setLang(option)">
-        {{ langLabel(option) | translate }}
-      </button>
-    }
-  </mat-menu>
+  <a matButton routerLink="/settings" routerLinkActive="active-link">
+    <mat-icon>settings</mat-icon>
+    {{ 'nav.settings' | translate }}
+  </a>
 </mat-toolbar>
 
 <main>

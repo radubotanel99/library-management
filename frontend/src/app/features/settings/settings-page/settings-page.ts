@@ -2,11 +2,16 @@ import { Component, inject, OnInit, signal } from '@angular/core';
 import { FormBuilder, FormControl, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { RouterLink } from '@angular/router';
 import { ApiError } from '../../../core/error/api-error';
 import { NotificationService } from '../../../core/error/notification.service';
+import { I18nService, Lang } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { TranslationKey } from '../../../core/i18n/translations/translation-key';
 import { ParameterRequest, ParameterResponse } from '../settings.model';
 import { SettingsService } from '../settings.service';
 
@@ -30,7 +35,10 @@ const VALUE_VALIDATORS = [
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatIconModule,
+    MatMenuModule,
     MatProgressBarModule,
+    RouterLink,
     TranslatePipe,
   ],
   templateUrl: './settings-page.html',
@@ -40,12 +48,16 @@ export class SettingsPage implements OnInit {
   private readonly settingsService = inject(SettingsService);
   private readonly notifications = inject(NotificationService);
   private readonly formBuilder = inject(FormBuilder);
+  private readonly i18n = inject(I18nService);
 
   protected readonly loading = signal(false);
   protected readonly saving = signal(false);
   protected readonly loadFailed = signal(false);
 
   protected readonly parameterMin = PARAMETER_MIN;
+
+  protected readonly lang = this.i18n.lang;
+  protected readonly langs = this.i18n.availableLangs;
 
   // Values are strings on the wire (`API_CONTRACT.md` §9), so the controls hold
   // strings too and nothing is converted twice.
@@ -152,5 +164,13 @@ export class SettingsPage implements OnInit {
       default:
         return null;
     }
+  }
+
+  protected langLabel(lang: Lang): TranslationKey {
+    return lang === 'ro' ? 'lang.ro' : 'lang.en';
+  }
+
+  protected setLang(lang: Lang): void {
+    this.i18n.setLang(lang);
   }
 }
