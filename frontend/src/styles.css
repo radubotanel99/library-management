@@ -1,1 +1,212 @@
-/* You can add global styles to this file, and also import other style files */
+/*
+ * Global layout for the app's own screens. Loaded after the design-system files
+ * (angular.json "styles"), so everything here builds on tokens.css variables.
+ *
+ * Class names carry an `app-` prefix: tokens.css already owns the bare type
+ * classes (.display, .h1, .title, .body, .label ...) and library-components.css
+ * owns `la-*`.
+ */
+
+html {
+  height: 100%;
+}
+
+/* Typography comes from the `body` type class on <body> (index.html). */
+body {
+  margin: 0;
+  height: 100%;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--font-sans);
+}
+
+/* Material Symbols at weight 300, unfilled: the closest match to the design system's stroke icons. */
+.material-symbols-outlined {
+  font-variation-settings:
+    'FILL' 0,
+    'wght' 300,
+    'GRAD' 0,
+    'opsz' 24;
+}
+
+/* ---------- Page scaffold ---------- */
+
+.app-page {
+  display: block;
+  padding: var(--space-6);
+}
+
+.app-page__header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.app-page__header h1 {
+  margin: 0;
+}
+
+/* A surface card: tables, forms and lists sit in one of these on the paper background. */
+.app-card {
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+}
+
+.app-card--padded {
+  padding: var(--space-4);
+}
+
+.app-section + .app-section {
+  margin-top: var(--space-6);
+}
+
+.app-section__title {
+  margin: 0 0 var(--space-3);
+}
+
+/* Wide tables scroll inside their card instead of pushing the page sideways on a tablet. */
+.app-table-scroll {
+  overflow-x: auto;
+  border-radius: var(--radius-lg);
+}
+
+/* ---------- Filters above a table ---------- */
+
+.app-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 var(--space-4);
+}
+
+.app-filters__search {
+  flex: 1 1 calc(var(--space-12) * 6);
+}
+
+.app-filters__select {
+  flex: 0 1 calc(var(--space-12) * 4);
+}
+
+/* ---------- Empty / loading / error states ---------- */
+
+.app-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-12) var(--space-4);
+  color: var(--ink-muted);
+  text-align: center;
+}
+
+.app-state p {
+  margin: 0;
+}
+
+.app-state--error .app-state__icon {
+  color: var(--danger);
+}
+
+/* Error inside a form (a lookup that failed), with its retry button alongside. */
+.app-inline-error {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0 0 var(--space-4);
+  color: var(--danger);
+}
+
+/* Keeps the layout steady: the bar occupies its line whether or not a request is running. */
+.app-progress-slot {
+  display: block;
+  min-height: var(--space-1);
+}
+
+/* ---------- Table cells ---------- */
+
+.app-table {
+  width: 100%;
+}
+
+.app-table .mat-mdc-header-row {
+  background: var(--surface-sunken);
+}
+
+/* Header cells use the design system's `label` style (tokens.css .label) plus uppercase. */
+.app-table .mat-mdc-header-cell {
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.app-table .mat-mdc-row:hover {
+  background: var(--surface-sunken);
+}
+
+.app-table .mat-mdc-row:last-child .mat-mdc-cell {
+  border-bottom: 0;
+}
+
+.app-cell--num {
+  text-align: end;
+  font-variant-numeric: tabular-nums;
+}
+
+.app-cell--actions {
+  white-space: nowrap;
+  text-align: end;
+}
+
+.app-cell--muted {
+  color: var(--ink-muted);
+}
+
+.app-paginator {
+  border-top: 1px solid var(--line);
+  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+}
+
+/* Read by screen readers, not shown (e.g. a column heading repeated per row). */
+.app-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* ---------- Dialogs ---------- */
+
+.app-dialog-content {
+  display: flex;
+  flex-direction: column;
+  min-width: min(calc(var(--space-12) * 8), 80vw);
+}
+
+/* M3 dialog content starts flush under the title; a little air keeps the first outline label clear. */
+.app-dialog-content.mat-mdc-dialog-content {
+  padding-top: var(--space-2);
+}
+
+.app-dialog-content--wide {
+  min-width: min(calc(var(--space-12) * 9), 80vw);
+}
+
+.app-dialog-prompt {
+  margin: 0 0 var(--space-4);
+}
+
+/* A sortable numeric header lines its label up with the right-aligned figures below it. */
+.app-cell--num .mat-sort-header-container {
+  justify-content: flex-end;
+}

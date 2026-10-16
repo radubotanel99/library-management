@@ -3,7 +3,9 @@ import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatSelectModule } from '@angular/material/select';
 import { ApiError } from '../../../core/error/api-error';
 import { NotificationService } from '../../../core/error/notification.service';
@@ -40,10 +42,11 @@ export const REMOVAL_REASONS: readonly RemovalReason[] = ['LOST', 'DAMAGED', 'WI
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
+    MatIconModule,
+    MatProgressBarModule,
     TranslatePipe,
   ],
   templateUrl: './book-remove-dialog.html',
-  styleUrl: './book-remove-dialog.css',
 })
 export class BookRemoveDialog {
   private readonly bookService = inject(BookService);

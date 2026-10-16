@@ -12,6 +12,12 @@ const LANGS: readonly Lang[] = ['en', 'ro'];
 
 const DICTIONARIES: Record<Lang, Record<TranslationKey, string>> = { en, ro };
 
+/**
+ * Angular locale id per UI language, for `DecimalPipe`/`DatePipe`. `en-US` ships
+ * with Angular; `ro` is registered with `registerLocaleData` in `app.config.ts`.
+ */
+const LOCALES: Record<Lang, string> = { en: 'en-US', ro: 'ro' };
+
 const PARAM_PATTERN = /\{\{\s*(\w+)\s*\}\}/g;
 
 function isLang(value: string | null): value is Lang {
@@ -46,6 +52,16 @@ export class I18nService {
 
   /** Active language, for templates that need to highlight the current choice. */
   readonly lang = this.currentLang.asReadonly();
+
+  /**
+   * Locale id for number and date pipes, following the UI language.
+   *
+   * Passed explicitly as the pipes' `locale` argument rather than provided as
+   * `LOCALE_ID`: that token is read once at bootstrap, so it could not follow a
+   * language switch without a reload. A pure pipe re-runs when an argument
+   * changes, so `{{ n | number: '1.0-0' : locale() }}` re-formats on switch.
+   */
+  readonly locale = computed(() => LOCALES[this.currentLang()]);
 
   readonly availableLangs = LANGS;
 

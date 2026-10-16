@@ -26,7 +26,7 @@ Companion documents: `FUNCTIONAL_SPEC.md` (what), `DATA_MODEL.md` (schema), `API
 - CORS config allowing `http://localhost:4200` in the dev profile only.
 - `.gitignore` (target, node_modules, dist, `.env`), `.env.example`, `README.md` with run instructions.
 
-**Done when:** `mvn spring-boot:run` starts on `:8080` against the Docker Postgres; `ng serve` starts on `:4200`.
+**Done when:** `./mvnw spring-boot:run` starts on `:8080` against the Docker Postgres; `ng serve` starts on `:4200`.
 
 ---
 
@@ -141,16 +141,19 @@ Frontend: stat cards plus a most-borrowed list, replacing the empty landing page
 
 ## Phase 7b — Design
 
-**Goal:** one consistent look across every screen built so far, before the app is packaged for deployment. No new endpoints or business logic — this phase only touches the frontend.
+**Goal:** one consistent look across every screen built so far, using the Library Admin design system (`.claude/docs/design-system/`), before the app is packaged for deployment. No new endpoints or business logic — this phase only touches the frontend.
 
-- Pick one Angular Material theme (palette + typography) applied globally; remove any per-screen default-theme leftovers.
-- Pass over every screen from Phases 2–7 (categories, books, archive, members, loans, settings, dashboard) for consistent spacing, table density, and button placement.
-- Add empty, loading, and error states wherever a table or form can be in one of those states and currently isn't handled.
+- Wire in the design system as described in `.claude/docs/design-system/THEME-SETUP.md`: `library-material-theme.scss`, `tokens.css` and `library-components.css` in `angular.json`; Fraunces + Source Sans 3 in `index.html`; remove the old `src/material-theme.scss` and any per-screen default-theme leftovers.
+- Light theme by default, dark theme via `ThemeService`, with a toggle in the shell. Its label goes through i18n.
+- Replace the current shell with the design-system Sidebar: one shared navigation linking every screen (dashboard, books, archive, categories, members, loans, settings), replacing any ad-hoc per-page links.
+- Restyle the dashboard with the design-system StatTile and RankedList, showing only what `GET /api/dashboard` returns. Out-of-scope pieces are listed under "Decision — Phase 7b scope" in `THEME-SETUP.md`.
+- Show book and loan states with the StatusBadge mapping in `THEME-SETUP.md`: icon + word, never colour alone.
+- Pass over every screen from Phases 2–7 for consistent spacing, table density and button placement, following the design-system README (one primary button per view, CSS variables only, no hard-coded colours or sizes).
+- Add empty, loading and error states wherever a table or form can be in one of those states and currently isn't handled.
 - Check responsive layout at common desk/tablet widths — librarians may use this from a tablet at the front desk.
-- Confirm a shared navigation shell (toolbar/sidenav) links every screen, replacing any ad-hoc per-page links.
 - Re-audit for hardcoded strings that slipped in while screens were built quickly — everything still routes through i18n keys, EN and RO both checked.
 
-**Done when:** every screen shares one Material theme, handles empty/loading/error states, is usable at tablet width, and no hardcoded strings remain in either language.
+**Done when:** every screen uses the design system in both light and dark theme, the shared sidebar links every screen, every screen handles empty/loading/error states, the app is usable at tablet width, and no hardcoded strings remain in either language.
 
 ---
 

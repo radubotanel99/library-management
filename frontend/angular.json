@@ -24,7 +24,12 @@
                 "input": "public"
               }
             ],
-            "styles": ["src/material-theme.scss", "src/styles.css"]
+            "styles": [
+              "src/styles/library-material-theme.scss",
+              "src/styles/tokens.css",
+              "src/styles/library-components.css",
+              "src/styles.css"
+            ]
           },
           "configurations": {
             "production": {

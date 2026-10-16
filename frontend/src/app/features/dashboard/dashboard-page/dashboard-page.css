@@ -1,65 +1,35 @@
-:host {
-  display: block;
-  padding: 1.5rem;
-}
-
-.header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  margin-bottom: 1rem;
-}
-
-.header h1 {
-  font: var(--mat-sys-headline-small);
-  margin: 0;
-}
-
-.placeholder {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0.5rem;
-  padding: 3rem 1rem;
-  color: var(--mat-sys-on-surface-variant);
-}
-
+/* Four tiles at most in a row (StatTile README); they wrap to two on a narrow screen. */
 .stats {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-  gap: 1rem;
-}
-
-.stat-value {
-  font: var(--mat-sys-display-small);
-  margin: 0;
+  grid-template-columns: repeat(auto-fit, minmax(calc(var(--space-12) * 4), 1fr));
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
 }
 
 .stat-label {
-  font: var(--mat-sys-body-medium);
-  color: var(--mat-sys-on-surface-variant);
-  margin: 0.25rem 0 0;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
 }
 
-/* Overdue loans are the one figure that asks for action, so it is the one tile
-   that changes colour — and only when there is something to act on. */
-.overdue-card .stat-value {
-  color: var(--mat-sys-error);
+/* The alert tile's word gets the same colour as its value, plus the icon. */
+.la-stat--alert .stat-label {
+  color: var(--danger);
 }
 
-.most-borrowed {
-  margin-top: 2rem;
+.stat-alert-icon {
+  width: var(--space-4);
+  height: var(--space-4);
+  font-size: var(--space-4);
 }
 
-.most-borrowed h2 {
-  font: var(--mat-sys-title-medium);
-  margin: 0 0 0.5rem;
+/* No cover and no row action on this list: rank · title/author · count. */
+.most-borrowed .la-ranked li {
+  grid-template-columns: var(--space-6) minmax(0, 1fr) auto;
 }
 
-table {
-  width: 100%;
-}
-
-.numeric-cell {
-  text-align: end;
+/* Type comes from the tokens' `label` class; uppercase as the README asks for labels. */
+.count-heading {
+  text-transform: uppercase;
+  color: var(--ink-muted);
 }

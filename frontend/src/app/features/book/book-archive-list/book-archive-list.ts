@@ -15,7 +15,10 @@ import { catchError, debounceTime, distinctUntilChanged, EMPTY, switchMap, tap }
 import { ApiError } from '../../../core/error/api-error';
 import { NotificationService } from '../../../core/error/notification.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { provideTranslatedPaginatorIntl } from '../../../core/i18n/translated-paginator-intl';
 import { TranslationKey } from '../../../core/i18n/translations/translation-key';
+import { breakpointMatches, TABLET_LAYOUT } from '../../../core/layout/breakpoints';
+import { StatusBadge } from '../../../core/ui/status-badge/status-badge';
 import { CategoryResponse } from '../../category/category.model';
 import { CategoryService } from '../../category/category.service';
 import {
@@ -28,6 +31,23 @@ import { BookService } from '../book.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
+
+// bookNumber is only unique among ACTIVE books (`DATA_MODEL.md` §4): an
+// archived copy's number may already have been reused by another active
+// book, so it never identifies a row here on its own. Title and author must
+// stay in this table, at every width.
+const COLUMNS = [
+  'bookNumber',
+  'title',
+  'author',
+  'categoryName',
+  'reason',
+  'removalNote',
+  'actions',
+] as const;
+
+/** Dropped at tablet width; the copy, its reason and the restore action stay. */
+const LOW_PRIORITY_COLUMNS: ReadonlySet<string> = new Set(['categoryName', 'removalNote']);
 
 @Component({
   selector: 'app-book-archive-list',
@@ -42,10 +62,12 @@ const SEARCH_DEBOUNCE_MS = 300;
     MatIconModule,
     MatTooltipModule,
     MatProgressBarModule,
+    StatusBadge,
     TranslatePipe,
   ],
+  host: { class: 'app-page' },
+  providers: [provideTranslatedPaginatorIntl()],
   templateUrl: './book-archive-list.html',
-  styleUrl: './book-archive-list.css',
 })
 export class BookArchiveList implements OnInit {
   private readonly bookService = inject(BookService);
@@ -60,6 +82,13 @@ export class BookArchiveList implements OnInit {
   protected readonly loadFailed = signal(false);
 
   protected readonly reasons = REMOVAL_REASONS;
+
+  /**
+   * The copy whose restore request is in flight. Restore has no dialog on the
+   * happy path, so this is the only feedback — and it stops a double click from
+   * sending a second request that would fail with BOOK_NOT_REMOVED.
+   */
+  protected readonly restoringId = signal<number | null>(null);
 
   protected readonly criteria = signal<BookArchiveSearchCriteria>({
     search: '',
@@ -88,19 +117,11 @@ export class BookArchiveList implements OnInit {
     () => (this.criteria().sort?.split(',')[1] ?? 'asc') as 'asc' | 'desc' | '',
   );
 
-  // bookNumber is only unique among ACTIVE books (`DATA_MODEL.md` §4): an
-  // archived copy's number may already have been reused by another active
-  // book, so it never identifies a row here on its own. Title and author must
-  // stay in this table.
-  protected readonly displayedColumns = [
-    'bookNumber',
-    'title',
-    'author',
-    'categoryName',
-    'reason',
-    'removalNote',
-    'actions',
-  ];
+  private readonly tablet = breakpointMatches(TABLET_LAYOUT);
+
+  protected readonly displayedColumns = computed(() =>
+    this.tablet() ? COLUMNS.filter((column) => !LOW_PRIORITY_COLUMNS.has(column)) : [...COLUMNS],
+  );
 
   constructor() {
     toObservable(this.request)
@@ -201,9 +222,17 @@ export class BookArchiveList implements OnInit {
    * needs one — a number now taken by another active book.
    */
   protected restore(book: BookResponse): void {
+    if (this.restoringId() !== null) {
+      return;
+    }
+    this.restoringId.set(book.id);
     this.bookService.restore(book.id).subscribe({
-      next: () => this.retry(),
+      next: () => {
+        this.restoringId.set(null);
+        this.retry();
+      },
       error: (error: ApiError) => {
+        this.restoringId.set(null);
         if (error.code === 'BOOK_NUMBER_TAKEN_ON_RESTORE') {
           this.openRestoreDialog(book);
           return;

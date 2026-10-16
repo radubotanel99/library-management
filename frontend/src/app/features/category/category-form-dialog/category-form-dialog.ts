@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ApiError } from '../../../core/error/api-error';
 import { NotificationService } from '../../../core/error/notification.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
@@ -24,10 +25,10 @@ export const DESCRIPTION_MAX_LENGTH = 500;
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatProgressBarModule,
     TranslatePipe,
   ],
   templateUrl: './category-form-dialog.html',
-  styleUrl: './category-form-dialog.css',
 })
 export class CategoryFormDialog {
   private readonly categoryService = inject(CategoryService);

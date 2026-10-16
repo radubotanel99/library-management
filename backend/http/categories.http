@@ -2,7 +2,7 @@
 #
 # Run the dev database and the backend first:
 #   docker compose -f compose.dev.yaml up -d
-#   cd backend && mvn spring-boot:run
+#   cd backend && ./mvnw spring-boot:run
 #
 # Requests are ordered so they can be run top to bottom on a fresh database.
 # {{id}} is captured from the create request below.

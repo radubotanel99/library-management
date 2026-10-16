@@ -11,7 +11,9 @@ import { MatAutocompleteModule } from '@angular/material/autocomplete';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import {
   catchError,
@@ -19,8 +21,10 @@ import {
   distinctUntilChanged,
   EMPTY,
   filter,
+  map,
   Observable,
   startWith,
+  Subject,
   switchMap,
   tap,
 } from 'rxjs';
@@ -74,6 +78,21 @@ function searchTerms(values: Observable<unknown>): Observable<string> {
 }
 
 /**
+ * Re-emits the current search term whenever `retry$` fires, so a failed lookup
+ * can be repeated without the user retyping. A new term starts afresh.
+ */
+function withRetry(terms: Observable<string>, retry$: Observable<void>): Observable<string> {
+  return terms.pipe(
+    switchMap((term) =>
+      retry$.pipe(
+        startWith(undefined),
+        map(() => term),
+      ),
+    ),
+  );
+}
+
+/**
  * Lends a copy to a member.
  *
  * Both fields are pickers over server-side searches rather than free-text ids:
@@ -90,8 +109,10 @@ function searchTerms(values: Observable<unknown>): Observable<string> {
     MatFormFieldModule,
     MatInputModule,
     MatAutocompleteModule,
+    MatProgressBarModule,
     MatProgressSpinnerModule,
     MatButtonModule,
+    MatIconModule,
     TranslatePipe,
   ],
   templateUrl: './loan-lend-dialog.html',
@@ -111,6 +132,11 @@ export class LoanLendDialog {
   protected readonly members = signal<readonly MemberResponse[]>([]);
   protected readonly booksLoading = signal(false);
   protected readonly membersLoading = signal(false);
+  protected readonly booksFailed = signal(false);
+  protected readonly membersFailed = signal(false);
+
+  private readonly booksRetry = new Subject<void>();
+  private readonly membersRetry = new Subject<void>();
 
   /**
    * Each control holds the picked entity, not its id: the autocomplete needs the
@@ -131,16 +157,21 @@ export class LoanLendDialog {
   constructor() {
     // `/api/books` returns the active catalogue only, so an archived copy can
     // never be offered here (`API_CONTRACT.md` §5).
-    searchTerms(this.form.controls.book.valueChanges)
+    withRetry(searchTerms(this.form.controls.book.valueChanges), this.booksRetry)
       .pipe(
-        tap(() => this.booksLoading.set(true)),
+        tap(() => {
+          this.booksLoading.set(true);
+          this.booksFailed.set(false);
+        }),
         // switchMap, not mergeMap: a slow response for an earlier keystroke must
         // never overwrite the results of a later, faster one.
         switchMap((search) =>
           this.bookService
             .list({ search, page: 0, size: OPTION_LIMIT, sort: 'title,asc' })
             .pipe(
-              catchError((error: ApiError) => this.reportAndContinue(error, this.booksLoading)),
+              catchError((error: ApiError) =>
+                this.reportAndContinue(error, this.booksLoading, this.booksFailed),
+              ),
             ),
         ),
         takeUntilDestroyed(),
@@ -152,14 +183,19 @@ export class LoanLendDialog {
 
     // `/api/members` returns active members only, which is exactly the set a
     // book may be lent to (`API_CONTRACT.md` §7).
-    searchTerms(this.form.controls.member.valueChanges)
+    withRetry(searchTerms(this.form.controls.member.valueChanges), this.membersRetry)
       .pipe(
-        tap(() => this.membersLoading.set(true)),
+        tap(() => {
+          this.membersLoading.set(true);
+          this.membersFailed.set(false);
+        }),
         switchMap((search) =>
           this.memberService
             .list({ search, page: 0, size: OPTION_LIMIT, sort: 'name,asc' })
             .pipe(
-              catchError((error: ApiError) => this.reportAndContinue(error, this.membersLoading)),
+              catchError((error: ApiError) =>
+                this.reportAndContinue(error, this.membersLoading, this.membersFailed),
+              ),
             ),
         ),
         takeUntilDestroyed(),
@@ -280,12 +316,28 @@ export class LoanLendDialog {
     return typeof value === 'object' ? value : null;
   }
 
+  /** Repeats the last book search after a failure. */
+  protected retryBooks(): void {
+    this.booksRetry.next();
+  }
+
+  /** Repeats the last member search after a failure. */
+  protected retryMembers(): void {
+    this.membersRetry.next();
+  }
+
   /**
    * A failed option lookup is reported and swallowed: `EMPTY` rather than a
-   * rethrow, or the picker would stop searching after one failure.
+   * rethrow, or the picker would stop searching after one failure. The failed
+   * flag drives the in-dialog error and its retry button.
    */
-  private reportAndContinue(error: ApiError, loading: WritableSignal<boolean>): Observable<never> {
+  private reportAndContinue(
+    error: ApiError,
+    loading: WritableSignal<boolean>,
+    failed: WritableSignal<boolean>,
+  ): Observable<never> {
     loading.set(false);
+    failed.set(true);
     this.notifications.showError(error);
     return EMPTY;
   }

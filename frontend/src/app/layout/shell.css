@@ -1,28 +1,81 @@
 :host {
   display: flex;
-  flex-direction: column;
   min-height: 100vh;
 }
 
-.title {
-  font: var(--mat-sys-title-medium);
-  margin-inline-end: 1.5rem;
+/* Fixed beside the content on a wide screen: the binding of the book. */
+.app-sidebar {
+  position: sticky;
+  top: 0;
+  flex: none;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.app-sidebar__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.app-sidebar__brand {
   color: inherit;
   text-decoration: none;
 }
 
-.spacer {
+.app-sidebar__links {
+  display: flex;
   flex: 1 1 auto;
+  flex-direction: column;
+  gap: var(--space-1);
 }
 
-.active-link {
-  text-decoration: underline;
+/* Pushes the theme toggle to the bottom of the sidebar. */
+.app-sidebar__footer {
+  margin-top: auto;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--sidebar-active);
 }
 
-main {
-  flex: 1 1 auto;
-  max-width: 60rem;
+/* Buttons that wear the nav-item look (theme toggle, menu toggle). */
+.app-sidebar__button {
   width: 100%;
-  margin: 0 auto;
-  box-sizing: border-box;
+  border: 0;
+  background: none;
+  font: inherit;
+  font-weight: 600;
+  text-align: start;
+  cursor: pointer;
+}
+
+.app-main {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+/* ---------- Below 900px: the sidebar becomes a top bar ---------- */
+
+:host(.app-shell--compact) {
+  flex-direction: column;
+}
+
+:host(.app-shell--compact) .app-sidebar {
+  z-index: 2;
+  width: auto;
+  height: auto;
+  max-height: 100vh;
+  padding: var(--space-2) var(--space-3);
+}
+
+:host(.app-shell--compact) .app-sidebar__brand {
+  padding: 0 var(--space-3);
+}
+
+:host(.app-shell--compact) .app-sidebar__links {
+  padding-bottom: var(--space-2);
+}
+
+:host(.app-shell--compact) .app-sidebar__menu-toggle {
+  width: auto;
 }

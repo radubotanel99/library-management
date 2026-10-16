@@ -14,6 +14,12 @@ export const en = {
   'nav.members': 'Members',
   'nav.loans': 'Loans',
   'nav.settings': 'Settings',
+  'nav.main': 'Main navigation',
+  'nav.menu': 'Menu',
+
+  // The toggle names the action it performs, not the theme currently shown.
+  'theme.switchToDark': 'Switch to dark theme',
+  'theme.switchToLight': 'Switch to light theme',
 
   'common.language': 'Language',
   'common.actions': 'Actions',
@@ -26,6 +32,15 @@ export const en = {
   'common.retry': 'Retry',
   'common.dismiss': 'Dismiss',
   'common.notSet': '—',
+  'common.loading': 'Loading…',
+
+  'paginator.itemsPerPage': 'Rows per page',
+  'paginator.firstPage': 'First page',
+  'paginator.previousPage': 'Previous page',
+  'paginator.nextPage': 'Next page',
+  'paginator.lastPage': 'Last page',
+  'paginator.range': '{{start}} – {{end}} of {{length}}',
+  'paginator.rangeEmpty': '0 of {{length}}',
 
   'lang.en': 'English',
   'lang.ro': 'Romanian',
@@ -72,7 +87,7 @@ export const en = {
   'book.column.category': 'Category',
   'book.column.publisher': 'Publisher',
   'book.column.price': 'Price',
-  'book.column.onLoan': 'On loan',
+  'book.column.status': 'Status',
   'book.onLoan.yes': 'On loan',
   'book.onLoan.no': 'On the shelf',
   'book.form.createTitle': 'Add book',

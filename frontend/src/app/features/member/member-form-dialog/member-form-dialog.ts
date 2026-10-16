@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ApiError } from '../../../core/error/api-error';
 import { NotificationService } from '../../../core/error/notification.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
@@ -29,10 +30,10 @@ export const PHONE_NUMBER_MAX_LENGTH = 50;
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatProgressBarModule,
     TranslatePipe,
   ],
   templateUrl: './member-form-dialog.html',
-  styleUrl: './member-form-dialog.css',
 })
 export class MemberFormDialog {
   private readonly memberService = inject(MemberService);

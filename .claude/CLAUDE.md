@@ -15,6 +15,8 @@ Replaces an older Java/Hibernate/Tomcat system currently in production at two li
 | `.claude/docs/DATA_MODEL.md` | Schema: tables, columns, constraints, and the reasoning behind them |
 | `.claude/docs/API_CONTRACT.md` | Every endpoint: paths, payloads, error codes |
 | `.claude/docs/BUILD_PLAN.md` | Phased build order and what is out of scope |
+| `.claude/docs/design-system/README.md` | Design system: colours, type, components. Read before any frontend styling work. |
+| `.claude/docs/design-system/THEME-SETUP.md` | Setup guide for the design system theme |
 
 **Read `API_CONTRACT.md` before touching any endpoint, and `DATA_MODEL.md` before touching the schema.**
 These files carry the reasoning for decisions that look wrong out of context — do not "fix" them without asking.
@@ -40,7 +42,7 @@ compose.yaml        Production: app + database
 docker compose -f compose.dev.yaml up -d
 
 # Backend  → localhost:8080
-cd backend && mvn spring-boot:run
+cd backend && ./mvnw spring-boot:run
 
 # Frontend → localhost:4200
 cd frontend && npm start

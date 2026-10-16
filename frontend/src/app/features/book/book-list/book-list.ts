@@ -15,7 +15,11 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { catchError, debounceTime, distinctUntilChanged, EMPTY, switchMap, tap } from 'rxjs';
 import { ApiError } from '../../../core/error/api-error';
 import { NotificationService } from '../../../core/error/notification.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { provideTranslatedPaginatorIntl } from '../../../core/i18n/translated-paginator-intl';
+import { breakpointMatches, TABLET_LAYOUT } from '../../../core/layout/breakpoints';
+import { StatusBadge } from '../../../core/ui/status-badge/status-badge';
 import { CategoryResponse } from '../../category/category.model';
 import { CategoryService } from '../../category/category.service';
 import { BookFormDialog, BookFormDialogData } from '../book-form-dialog/book-form-dialog';
@@ -25,6 +29,25 @@ import { BookService } from '../book.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
+
+// bookNumber is only unique among ACTIVE books (`DATA_MODEL.md` §4, and the
+// "things that look like bugs" list in CLAUDE.md): a removed copy frees its
+// number for reuse. So the number alone never identifies a book to a human —
+// title and author must stay in this table, at every width. Do not strip them
+// for a "compact" view.
+const COLUMNS = [
+  'bookNumber',
+  'title',
+  'author',
+  'categoryName',
+  'publisher',
+  'price',
+  'status',
+  'actions',
+] as const;
+
+/** Dropped at tablet width; everything that identifies a copy or acts on it stays. */
+const LOW_PRIORITY_COLUMNS: ReadonlySet<string> = new Set(['publisher', 'price']);
 
 @Component({
   selector: 'app-book-list',
@@ -40,10 +63,12 @@ const SEARCH_DEBOUNCE_MS = 300;
     MatTooltipModule,
     MatProgressBarModule,
     DecimalPipe,
+    StatusBadge,
     TranslatePipe,
   ],
+  host: { class: 'app-page' },
+  providers: [provideTranslatedPaginatorIntl()],
   templateUrl: './book-list.html',
-  styleUrl: './book-list.css',
 })
 export class BookList implements OnInit {
   private readonly bookService = inject(BookService);
@@ -82,21 +107,14 @@ export class BookList implements OnInit {
     () => (this.criteria().sort?.split(',')[1] ?? 'asc') as 'asc' | 'desc' | '',
   );
 
-  // bookNumber is only unique among ACTIVE books (`DATA_MODEL.md` §4, and the
-  // "things that look like bugs" list in CLAUDE.md): a removed copy frees its
-  // number for reuse. So the number alone never identifies a book to a human —
-  // title and author must stay in this table. Do not strip them for a
-  // "compact" view.
-  protected readonly displayedColumns = [
-    'bookNumber',
-    'title',
-    'author',
-    'categoryName',
-    'publisher',
-    'price',
-    'onLoan',
-    'actions',
-  ];
+  /** Price formatting follows the UI language. */
+  protected readonly locale = inject(I18nService).locale;
+
+  private readonly tablet = breakpointMatches(TABLET_LAYOUT);
+
+  protected readonly displayedColumns = computed(() =>
+    this.tablet() ? COLUMNS.filter((column) => !LOW_PRIORITY_COLUMNS.has(column)) : [...COLUMNS],
+  );
 
   constructor() {
     toObservable(this.request)

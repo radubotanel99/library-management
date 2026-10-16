@@ -1,4 +1,4 @@
-import { DatePipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -15,9 +15,13 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { catchError, debounceTime, distinctUntilChanged, EMPTY, switchMap, tap } from 'rxjs';
 import { ApiError } from '../../../core/error/api-error';
 import { NotificationService } from '../../../core/error/notification.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { provideTranslatedPaginatorIntl } from '../../../core/i18n/translated-paginator-intl';
 import { TranslationKey } from '../../../core/i18n/translations/translation-key';
+import { breakpointMatches, TABLET_LAYOUT } from '../../../core/layout/breakpoints';
 import { ConfirmDialog, ConfirmDialogData } from '../../../core/ui/confirm-dialog/confirm-dialog';
+import { StatusBadge } from '../../../core/ui/status-badge/status-badge';
 import { LoanLendDialog } from '../loan-lend-dialog/loan-lend-dialog';
 import { LoanResponse, LoanSearchCriteria, LoanState, LoanStateFilter } from '../loan.model';
 import { LoanService } from '../loan.service';
@@ -26,10 +30,41 @@ const DEFAULT_PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
 
 /**
- * A fixed pattern rather than a locale-dependent one: the application ships two
- * languages off one `LOCALE_ID`, and `yyyy-MM-dd` reads the same in both.
+ * Short day-month-year, as the design system asks ("29 Oct 2026"). The month
+ * name comes from the locale passed alongside it, so it reads "29 oct. 2026"
+ * in Romanian and switches with the UI language.
  */
-const DATE_FORMAT = 'yyyy-MM-dd';
+const DATE_FORMAT = 'd MMM y';
+
+// The book column carries title, author and number together: a book number is
+// unique only among ACTIVE copies (`DATA_MODEL.md` §4), so it identifies
+// nothing on its own. Do not split it out for a "compact" view.
+//
+// Only borrowedAt (the loan's createdAt) and finishedAt are sortable. state is
+// a stored column the server refuses to order by, since it can disagree with
+// the derived ACTIVE/LATE value shown next to it; the rest are either joined
+// columns the server cannot order by, or derived values with no column at all
+// (dueAt, daysOverdue).
+const COLUMNS = [
+  'book',
+  'member',
+  'state',
+  'borrowedAt',
+  'dueAt',
+  'daysOverdue',
+  'finishedAt',
+  'actions',
+] as const;
+
+/**
+ * Dropped at tablet width. What stays answers the desk question — which copy,
+ * who has it, is it late, when is it due — and keeps the return action.
+ */
+const LOW_PRIORITY_COLUMNS: ReadonlySet<string> = new Set([
+  'borrowedAt',
+  'daysOverdue',
+  'finishedAt',
+]);
 
 /**
  * `OPEN` first and selected by default: the working view of this screen is what
@@ -52,10 +87,13 @@ export const STATE_FILTERS: readonly LoanStateFilter[] = ['OPEN', 'ACTIVE', 'LAT
     MatTooltipModule,
     MatProgressBarModule,
     DatePipe,
+    DecimalPipe,
+    StatusBadge,
     TranslatePipe,
   ],
+  host: { class: 'app-page' },
+  providers: [provideTranslatedPaginatorIntl()],
   templateUrl: './loan-list.html',
-  styleUrl: './loan-list.css',
 })
 export class LoanList {
   private readonly loanService = inject(LoanService);
@@ -99,25 +137,14 @@ export class LoanList {
     () => (this.criteria().sort?.split(',')[1] ?? 'desc') as 'asc' | 'desc' | '',
   );
 
-  // The book column carries title, author and number together: a book number is
-  // unique only among ACTIVE copies (`DATA_MODEL.md` §4), so it identifies
-  // nothing on its own. Do not split it out for a "compact" view.
-  //
-  // Only borrowedAt (the loan's createdAt) and finishedAt are sortable. state is
-  // a stored column the server refuses to order by, since it can disagree with
-  // the derived ACTIVE/LATE value shown next to it; the rest are either joined
-  // columns the server cannot order by, or derived values with no column at all
-  // (dueAt, daysOverdue).
-  protected readonly displayedColumns = [
-    'book',
-    'member',
-    'state',
-    'borrowedAt',
-    'dueAt',
-    'daysOverdue',
-    'finishedAt',
-    'actions',
-  ];
+  /** Dates and numbers follow the UI language. */
+  protected readonly locale = inject(I18nService).locale;
+
+  private readonly tablet = breakpointMatches(TABLET_LAYOUT);
+
+  protected readonly displayedColumns = computed(() =>
+    this.tablet() ? COLUMNS.filter((column) => !LOW_PRIORITY_COLUMNS.has(column)) : [...COLUMNS],
+  );
 
   constructor() {
     toObservable(this.request)

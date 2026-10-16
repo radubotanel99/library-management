@@ -1,20 +1,26 @@
 <!doctype html>
-<html lang="en">
+<!-- data-theme: light until ThemeService applies the stored preference on startup. -->
+<html lang="en" data-theme="light">
   <head>
     <meta charset="utf-8" />
-    <title>Frontend</title>
+    <!-- Pre-bootstrap fallback only: the shell sets the translated title through Angular's Title service. -->
+    <title>Library Management</title>
     <base href="/" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <link rel="icon" type="image/x-icon" href="favicon.ico" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,600&family=Source+Sans+3:wght@400;600;700&display=swap"
       rel="stylesheet"
     />
-    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet" />
+    <!-- Material Symbols Outlined at weight 300: the closest match to the design system's stroke icons. -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,300,0,0&display=block"
+      rel="stylesheet"
+    />
   </head>
-  <body>
+  <body class="body">
     <app-root></app-root>
   </body>
 </html>

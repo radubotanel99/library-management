@@ -1,9 +1,12 @@
-import { Component, inject, OnInit, signal } from '@angular/core';
+import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { AbstractControl, FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { ApiError } from '../../../core/error/api-error';
 import { NotificationService } from '../../../core/error/notification.service';
@@ -31,10 +34,12 @@ export const PRICE_MIN = 0;
     MatInputModule,
     MatSelectModule,
     MatButtonModule,
+    MatIconModule,
+    MatProgressBarModule,
+    MatProgressSpinnerModule,
     TranslatePipe,
   ],
   templateUrl: './book-form-dialog.html',
-  styleUrl: './book-form-dialog.css',
 })
 export class BookFormDialog implements OnInit {
   private readonly bookService = inject(BookService);
@@ -46,6 +51,13 @@ export class BookFormDialog implements OnInit {
   protected readonly book = inject<BookFormDialogData>(MAT_DIALOG_DATA);
   protected readonly saving = signal(false);
   protected readonly categories = signal<readonly CategoryResponse[]>([]);
+  protected readonly categoriesLoading = signal(false);
+  protected readonly categoriesFailed = signal(false);
+
+  /** Saving needs a category, and one can only be picked once the list is in. */
+  protected readonly categoriesReady = computed(
+    () => !this.categoriesLoading() && !this.categoriesFailed(),
+  );
 
   protected readonly titleMaxLength = TITLE_MAX_LENGTH;
   protected readonly authorMaxLength = AUTHOR_MAX_LENGTH;
@@ -69,16 +81,32 @@ export class BookFormDialog implements OnInit {
   });
 
   ngOnInit(): void {
-    // Only active categories are addressable, and that is exactly what the
-    // endpoint returns (`API_CONTRACT.md` §6).
+    this.loadCategories();
+  }
+
+  /**
+   * Only active categories are addressable, and that is exactly what the
+   * endpoint returns (`API_CONTRACT.md` §6). A failure is shown inside the
+   * dialog with a retry, so the user's typing is not lost to a reopen.
+   */
+  protected loadCategories(): void {
+    this.categoriesLoading.set(true);
+    this.categoriesFailed.set(false);
     this.categoryService.list().subscribe({
-      next: (categories) => this.categories.set(categories),
-      error: (error: ApiError) => this.notifications.showError(error),
+      next: (categories) => {
+        this.categories.set(categories);
+        this.categoriesLoading.set(false);
+      },
+      error: (error: ApiError) => {
+        this.categoriesLoading.set(false);
+        this.categoriesFailed.set(true);
+        this.notifications.showError(error);
+      },
     });
   }
 
   protected submit(): void {
-    if (this.form.invalid || this.saving()) {
+    if (this.form.invalid || this.saving() || !this.categoriesReady()) {
       this.form.markAllAsTouched();
       return;
     }

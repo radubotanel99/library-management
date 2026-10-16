@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
 import { MatDialog } from '@angular/material/dialog';
@@ -8,6 +9,7 @@ import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ApiError } from '../../../core/error/api-error';
 import { NotificationService } from '../../../core/error/notification.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { ConfirmDialog, ConfirmDialogData } from '../../../core/ui/confirm-dialog/confirm-dialog';
 import {
@@ -26,10 +28,11 @@ import { CategoryService } from '../category.service';
     MatIconModule,
     MatTooltipModule,
     MatProgressBarModule,
+    DecimalPipe,
     TranslatePipe,
   ],
+  host: { class: 'app-page' },
   templateUrl: './category-list.html',
-  styleUrl: './category-list.css',
 })
 export class CategoryList implements OnInit {
   private readonly categoryService = inject(CategoryService);
@@ -47,7 +50,11 @@ export class CategoryList implements OnInit {
     sortCategories(this.categories(), this.sort()),
   );
 
+  // Four columns fit a tablet as they are, so there is no breakpoint logic here.
   protected readonly displayedColumns = ['name', 'description', 'bookCount', 'actions'];
+
+  /** Counts follow the UI language's number format. */
+  protected readonly locale = inject(I18nService).locale;
 
   ngOnInit(): void {
     this.load();
@@ -87,6 +94,7 @@ export class CategoryList implements OnInit {
       messageKey: 'category.delete.message',
       messageParams: { name: category.name },
       confirmLabelKey: 'common.delete',
+      destructive: true,
     };
     this.dialog
       .open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, { data })

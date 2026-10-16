@@ -1,38 +1,50 @@
-<mat-toolbar color="primary">
-  <a class="title" routerLink="/dashboard">{{ 'app.title' | translate }}</a>
-
-  <nav>
-    <!-- First, and the landing route: it is the screen a shift starts on. -->
-<!--    <a matButton routerLink="/dashboard" routerLinkActive="active-link">-->
-<!--      {{ 'nav.dashboard' | translate }}-->
-<!--    </a>-->
-    <a
-      matButton
-      routerLink="/books"
-      routerLinkActive="active-link"
-      [routerLinkActiveOptions]="{ exact: true }"
-    >
-      {{ 'nav.books' | translate }}
+<nav class="la la-sidebar app-sidebar" [attr.aria-label]="'nav.main' | translate">
+  <div class="app-sidebar__top">
+    <a class="la-sidebar__brand app-sidebar__brand" routerLink="/dashboard" (click)="closeMenu()">
+      <mat-icon aria-hidden="true">local_library</mat-icon>
+      <span>{{ 'app.title' | translate }}</span>
     </a>
-    <a matButton routerLink="/categories" routerLinkActive="active-link">
-      {{ 'nav.categories' | translate }}
-    </a>
-    <a matButton routerLink="/members" routerLinkActive="active-link">
-      {{ 'nav.members' | translate }}
-    </a>
-    <a matButton routerLink="/loans" routerLinkActive="active-link">
-      {{ 'nav.loans' | translate }}
-    </a>
-  </nav>
 
-  <span class="spacer"></span>
+    @if (compact()) {
+      <button
+        type="button"
+        class="la-nav app-sidebar__button app-sidebar__menu-toggle"
+        aria-controls="app-sidebar-links"
+        [attr.aria-expanded]="menuOpen()"
+        [attr.aria-label]="'nav.menu' | translate"
+        (click)="toggleMenu()"
+      >
+        <mat-icon aria-hidden="true">{{ menuOpen() ? 'close' : 'menu' }}</mat-icon>
+      </button>
+    }
+  </div>
 
-  <a matButton routerLink="/settings" routerLinkActive="active-link">
-    <mat-icon>settings</mat-icon>
-    {{ 'nav.settings' | translate }}
-  </a>
-</mat-toolbar>
+  @if (linksVisible()) {
+    <div id="app-sidebar-links" class="app-sidebar__links">
+      @for (item of navItems; track item.path) {
+        <a
+          class="la-nav"
+          [routerLink]="item.path"
+          routerLinkActive="app-nav--active"
+          ariaCurrentWhenActive="page"
+          [routerLinkActiveOptions]="{ exact: item.exact }"
+          (click)="closeMenu()"
+        >
+          <mat-icon aria-hidden="true">{{ item.icon }}</mat-icon>
+          {{ item.labelKey | translate }}
+        </a>
+      }
 
-<main>
+      <div class="app-sidebar__footer">
+        <button type="button" class="la-nav app-sidebar__button" (click)="toggleTheme()">
+          <mat-icon aria-hidden="true">{{ themeToggleIcon() }}</mat-icon>
+          {{ themeToggleLabel() | translate }}
+        </button>
+      </div>
+    </div>
+  }
+</nav>
+
+<main class="app-main">
   <router-outlet />
 </main>

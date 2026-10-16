@@ -1,12 +1,23 @@
 <h2 mat-dialog-title>{{ data.titleKey | translate }}</h2>
 
 <mat-dialog-content>
-  <p>{{ data.messageKey | translate: data.messageParams }}</p>
+  <p class="app-dialog-prompt">{{ data.messageKey | translate: data.messageParams }}</p>
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
   <button matButton mat-dialog-close>{{ 'common.cancel' | translate }}</button>
-  <button matButton="filled" color="warn" [mat-dialog-close]="true">
-    {{ data.confirmLabelKey | translate }}
-  </button>
+  @if (data.destructive) {
+    <!--
+      Danger, not brand: brand never means "this destroys something" (design
+      system README, "Colour"). The icon carries the meaning beside the colour.
+    -->
+    <button matButton="outlined" class="app-button--danger" [mat-dialog-close]="true">
+      <mat-icon aria-hidden="true">delete</mat-icon>
+      {{ data.confirmLabelKey | translate }}
+    </button>
+  } @else {
+    <button matButton="filled" [mat-dialog-close]="true">
+      {{ data.confirmLabelKey | translate }}
+    </button>
+  }
 </mat-dialog-actions>

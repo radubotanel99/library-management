@@ -1,7 +1,13 @@
 <h2 mat-dialog-title>{{ 'loan.form.title' | translate }}</h2>
 
 <form [formGroup]="form" (ngSubmit)="submit()">
-  <mat-dialog-content>
+  <div class="app-progress-slot">
+    @if (saving()) {
+      <mat-progress-bar mode="indeterminate" [attr.aria-label]="'common.loading' | translate" />
+    }
+  </div>
+
+  <mat-dialog-content class="app-dialog-content app-dialog-content--wide">
     <!--
       A picker, never a free-text id: the value written into the control is the
       whole row the user clicked, so a copy that was only typed cannot be lent.
@@ -10,7 +16,7 @@
       <mat-label>{{ 'loan.form.book' | translate }}</mat-label>
       <input matInput formControlName="book" [matAutocomplete]="bookAuto" />
       @if (booksLoading()) {
-        <mat-spinner matSuffix diameter="18" />
+        <mat-spinner matSuffix diameter="18" [attr.aria-label]="'common.loading' | translate" />
       }
       <mat-hint>{{ 'loan.form.bookHint' | translate }}</mat-hint>
       @if (form.controls.book.hasError('required')) {
@@ -43,15 +49,28 @@
           }
         </mat-option>
       } @empty {
-        <mat-option disabled>{{ 'loan.form.noResults' | translate }}</mat-option>
+        <!-- An empty list after a failed lookup is not "no results": say which it is. -->
+        <mat-option disabled>
+          {{ (booksFailed() ? 'book.list.loadError' : 'loan.form.noResults') | translate }}
+        </mat-option>
       }
     </mat-autocomplete>
+
+    @if (booksFailed()) {
+      <div class="app-inline-error" role="alert">
+        <mat-icon aria-hidden="true">error</mat-icon>
+        <span>{{ 'book.list.loadError' | translate }}</span>
+        <button matButton type="button" (click)="retryBooks()">
+          {{ 'common.retry' | translate }}
+        </button>
+      </div>
+    }
 
     <mat-form-field appearance="outline">
       <mat-label>{{ 'loan.form.member' | translate }}</mat-label>
       <input matInput formControlName="member" [matAutocomplete]="memberAuto" />
       @if (membersLoading()) {
-        <mat-spinner matSuffix diameter="18" />
+        <mat-spinner matSuffix diameter="18" [attr.aria-label]="'common.loading' | translate" />
       }
       <mat-hint>{{ 'loan.form.memberHint' | translate }}</mat-hint>
       @if (form.controls.member.hasError('required')) {
@@ -71,9 +90,21 @@
       @for (member of members(); track member.id) {
         <mat-option [value]="member">{{ member.name }}</mat-option>
       } @empty {
-        <mat-option disabled>{{ 'loan.form.noResults' | translate }}</mat-option>
+        <mat-option disabled>
+          {{ (membersFailed() ? 'member.list.loadError' : 'loan.form.noResults') | translate }}
+        </mat-option>
       }
     </mat-autocomplete>
+
+    @if (membersFailed()) {
+      <div class="app-inline-error" role="alert">
+        <mat-icon aria-hidden="true">error</mat-icon>
+        <span>{{ 'member.list.loadError' | translate }}</span>
+        <button matButton type="button" (click)="retryMembers()">
+          {{ 'common.retry' | translate }}
+        </button>
+      </div>
+    }
   </mat-dialog-content>
 
   <mat-dialog-actions align="end">

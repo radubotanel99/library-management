@@ -6,7 +6,6 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
-import { RouterLink } from '@angular/router';
 import { ApiError } from '../../../core/error/api-error';
 import { NotificationService } from '../../../core/error/notification.service';
 import { I18nService, Lang } from '../../../core/i18n/i18n.service';
@@ -38,9 +37,9 @@ const VALUE_VALIDATORS = [
     MatIconModule,
     MatMenuModule,
     MatProgressBarModule,
-    RouterLink,
     TranslatePipe,
   ],
+  host: { class: 'app-page' },
   templateUrl: './settings-page.html',
   styleUrl: './settings-page.css',
 })

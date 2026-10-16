@@ -21,7 +21,7 @@ compose.yaml        Production: app + database
 docker compose -f compose.dev.yaml up -d
 
 # Backend  → localhost:8080
-cd backend && mvn spring-boot:run
+cd backend && ./mvnw spring-boot:run
 
 # Frontend → localhost:4200
 cd frontend && npm start

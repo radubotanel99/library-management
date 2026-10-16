@@ -16,6 +16,11 @@ export const ro: Record<TranslationKey, string> = {
   'nav.members': 'Membri',
   'nav.loans': 'Împrumuturi',
   'nav.settings': 'Setări',
+  'nav.main': 'Navigare principală',
+  'nav.menu': 'Meniu',
+
+  'theme.switchToDark': 'Treci la tema întunecată',
+  'theme.switchToLight': 'Treci la tema luminoasă',
 
   'common.language': 'Limbă',
   'common.actions': 'Acțiuni',
@@ -28,6 +33,15 @@ export const ro: Record<TranslationKey, string> = {
   'common.retry': 'Reîncearcă',
   'common.dismiss': 'Închide',
   'common.notSet': '—',
+  'common.loading': 'Se încarcă…',
+
+  'paginator.itemsPerPage': 'Rânduri pe pagină',
+  'paginator.firstPage': 'Prima pagină',
+  'paginator.previousPage': 'Pagina anterioară',
+  'paginator.nextPage': 'Pagina următoare',
+  'paginator.lastPage': 'Ultima pagină',
+  'paginator.range': '{{start}} – {{end}} din {{length}}',
+  'paginator.rangeEmpty': '0 din {{length}}',
 
   'lang.en': 'Engleză',
   'lang.ro': 'Română',
@@ -72,7 +86,7 @@ export const ro: Record<TranslationKey, string> = {
   'book.column.category': 'Categorie',
   'book.column.publisher': 'Editură',
   'book.column.price': 'Preț',
-  'book.column.onLoan': 'Împrumutată',
+  'book.column.status': 'Stare',
   'book.onLoan.yes': 'Împrumutată',
   'book.onLoan.no': 'La raft',
   'book.form.createTitle': 'Adaugă carte',

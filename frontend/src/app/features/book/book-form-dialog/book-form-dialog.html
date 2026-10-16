@@ -3,7 +3,13 @@
 </h2>
 
 <form [formGroup]="form" (ngSubmit)="submit()">
-  <mat-dialog-content>
+  <div class="app-progress-slot">
+    @if (saving()) {
+      <mat-progress-bar mode="indeterminate" [attr.aria-label]="'common.loading' | translate" />
+    }
+  </div>
+
+  <mat-dialog-content class="app-dialog-content">
     <mat-form-field appearance="outline">
       <mat-label>{{ 'book.form.title' | translate }}</mat-label>
       <input matInput formControlName="title" />
@@ -49,6 +55,9 @@
           <mat-option [value]="category.id">{{ category.name }}</mat-option>
         }
       </mat-select>
+      @if (categoriesLoading()) {
+        <mat-spinner matSuffix diameter="18" [attr.aria-label]="'common.loading' | translate" />
+      }
       @if (form.controls.categoryId.hasError('required')) {
         <mat-error>{{ 'validation.required' | translate }}</mat-error>
       } @else if (form.controls.categoryId.hasError('duplicate')) {
@@ -57,6 +66,17 @@
         <mat-error>{{ 'validation.server' | translate }}</mat-error>
       }
     </mat-form-field>
+
+    <!-- The category list is a lookup: without it nothing valid can be picked, so say so and offer a retry. -->
+    @if (categoriesFailed()) {
+      <div class="app-inline-error" role="alert">
+        <mat-icon aria-hidden="true">error</mat-icon>
+        <span>{{ 'category.list.loadError' | translate }}</span>
+        <button matButton type="button" (click)="loadCategories()">
+          {{ 'common.retry' | translate }}
+        </button>
+      </div>
+    }
 
     <mat-form-field appearance="outline">
       <mat-label>{{ 'book.form.publisher' | translate }}</mat-label>
@@ -83,7 +103,8 @@
     <button matButton type="button" mat-dialog-close [disabled]="saving()">
       {{ 'common.cancel' | translate }}
     </button>
-    <button matButton="filled" type="submit" [disabled]="saving()">
+    <!-- Disabled until the categories are in: the select cannot hold a valid choice before then. -->
+    <button matButton="filled" type="submit" [disabled]="saving() || !categoriesReady()">
       {{ 'common.save' | translate }}
     </button>
   </mat-dialog-actions>

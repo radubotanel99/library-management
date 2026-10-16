@@ -4,6 +4,7 @@ import { MatButtonModule } from '@angular/material/button';
 import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatInputModule } from '@angular/material/input';
+import { MatProgressBarModule } from '@angular/material/progress-bar';
 import { ApiError } from '../../../core/error/api-error';
 import { NotificationService } from '../../../core/error/notification.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
@@ -31,10 +32,10 @@ export const RESTORE_BOOK_NUMBER_MIN = 1;
     MatFormFieldModule,
     MatInputModule,
     MatButtonModule,
+    MatProgressBarModule,
     TranslatePipe,
   ],
   templateUrl: './book-restore-dialog.html',
-  styleUrl: './book-restore-dialog.css',
 })
 export class BookRestoreDialog {
   private readonly bookService = inject(BookService);

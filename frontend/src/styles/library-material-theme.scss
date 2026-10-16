@@ -1,0 +1,120 @@
+// Library Admin design system → Angular Material (Material 3, v19+; this project is on v22).
+// Material components read --mat-sys-* variables; we point them at the tokens in tokens.css,
+// so switching data-theme="dark" on <html> re-themes Material too.
+//
+// Wired in through the angular.json "styles" array (first entry, before tokens.css) — see
+// .claude/docs/design-system/THEME-SETUP.md. Every colour here is a var() onto a token; the
+// only literals left are the ones mat.theme() generates for roles that are the same in both
+// themes (--mat-sys-shadow and --mat-sys-scrim are black in light and dark alike).
+@use '@angular/material' as mat;
+
+html {
+  color-scheme: light;
+  @include mat.theme((
+    color: (primary: mat.$red-palette, tertiary: mat.$orange-palette, theme-type: light),
+    typography: (plain-family: '"Source Sans 3", "Segoe UI", system-ui, sans-serif',
+                 brand-family: '"Fraunces", Georgia, serif'),
+    density: 0,
+  ));
+}
+html[data-theme='dark'] { color-scheme: dark; }
+
+// Map Material's system roles onto Library Admin tokens (both themes follow automatically).
+// mat.theme() above emits *light* values for every role; any role not re-pointed here would
+// stay light in dark mode, so every colour role a component reads is mapped.
+html {
+  --mat-sys-primary: var(--brand);
+  --mat-sys-on-primary: var(--on-brand);
+  --mat-sys-primary-container: var(--brand-soft);
+  --mat-sys-on-primary-container: var(--brand-text);
+  --mat-sys-inverse-primary: var(--brand-soft);
+
+  // Secondary drives selected options in mat-select/autocomplete and tonal states:
+  // a quiet neutral, so a selected row never reads as an error or a primary action.
+  --mat-sys-secondary: var(--ink-muted);
+  --mat-sys-on-secondary: var(--surface);
+  --mat-sys-secondary-container: var(--neutral-soft);
+  --mat-sys-on-secondary-container: var(--ink);
+
+  // Tertiary is barely used by the components in this app; teal keeps it clear of brand/danger.
+  --mat-sys-tertiary: var(--success);
+  --mat-sys-on-tertiary: var(--surface);
+  --mat-sys-tertiary-container: var(--success-soft);
+  --mat-sys-on-tertiary-container: var(--success);
+
+  --mat-sys-error: var(--danger);
+  --mat-sys-on-error: var(--on-danger);
+  --mat-sys-error-container: var(--danger-soft);
+  --mat-sys-on-error-container: var(--danger);
+
+  --mat-sys-background: var(--paper);
+  --mat-sys-on-background: var(--ink);
+  --mat-sys-surface: var(--surface);
+  --mat-sys-on-surface: var(--ink);
+  --mat-sys-surface-variant: var(--surface-sunken);
+  --mat-sys-on-surface-variant: var(--ink-muted);
+  --mat-sys-surface-dim: var(--surface-sunken);
+  --mat-sys-surface-bright: var(--surface);
+  --mat-sys-surface-tint: var(--brand);
+  --mat-sys-surface-container-lowest: var(--surface);
+  --mat-sys-surface-container-low: var(--surface);
+  --mat-sys-surface-container: var(--surface);
+  --mat-sys-surface-container-high: var(--surface-sunken);
+  --mat-sys-surface-container-highest: var(--surface-sunken);
+  --mat-sys-outline: var(--line-strong);
+  --mat-sys-outline-variant: var(--line);
+
+  // Snackbar and tooltip sit on the inverse surface.
+  --mat-sys-inverse-surface: var(--ink);
+  --mat-sys-inverse-on-surface: var(--paper);
+
+  // Palette roles that a few components read directly: the native <select> option text in
+  // form fields (neutral10) and the sidenav scrim (neutral-variant20).
+  --mat-sys-neutral10: var(--ink);
+  --mat-sys-neutral-variant20: var(--ink);
+
+  --mat-sys-corner-small: var(--radius-sm);
+  --mat-sys-corner-medium: var(--radius-md);
+  --mat-sys-corner-large: var(--radius-lg);
+}
+
+// Pill buttons, like the design system
+html {
+  @include mat.button-overrides((
+    filled-container-shape: var(--radius-pill),
+    outlined-container-shape: var(--radius-pill),
+    text-container-shape: var(--radius-pill),
+  ));
+}
+
+// Destructive actions (delete, remove a copy). Material 3 ignores color="warn", so the
+// design system's danger button (la-btn--danger: danger outline and label on surface) is
+// rebuilt on the outlined button. Use with matButton="outlined".
+.app-button--danger {
+  @include mat.button-overrides((
+    outlined-label-text-color: var(--danger),
+    outlined-outline-color: var(--danger),
+    outlined-state-layer-color: var(--danger),
+    outlined-ripple-color: var(--danger-soft),
+  ));
+}
+
+// Tables: surface cards, sunken header row, hairline rules, a denser row than M3's 52px.
+html {
+  @include mat.table-overrides((
+    background-color: var(--surface),
+    header-headline-color: var(--ink-muted),
+    row-item-label-text-color: var(--ink),
+    row-item-outline-color: var(--line),
+    header-headline-font: var(--font-sans),
+    row-item-label-text-font: var(--font-sans),
+    header-container-height: calc(var(--space-12) - var(--space-1)),
+    row-item-container-height: var(--space-12),
+  ));
+
+  @include mat.paginator-overrides((
+    container-background-color: var(--surface),
+    container-text-color: var(--ink-muted),
+    container-text-font: var(--font-sans),
+  ));
+}

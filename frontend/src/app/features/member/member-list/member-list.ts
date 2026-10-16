@@ -1,3 +1,4 @@
+import { DecimalPipe } from '@angular/common';
 import { Component, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed, toObservable } from '@angular/core/rxjs-interop';
 import { MatButtonModule } from '@angular/material/button';
@@ -13,7 +14,10 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { catchError, debounceTime, distinctUntilChanged, EMPTY, switchMap, tap } from 'rxjs';
 import { ApiError } from '../../../core/error/api-error';
 import { NotificationService } from '../../../core/error/notification.service';
+import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { provideTranslatedPaginatorIntl } from '../../../core/i18n/translated-paginator-intl';
+import { breakpointMatches, TABLET_LAYOUT } from '../../../core/layout/breakpoints';
 import { ConfirmDialog, ConfirmDialogData } from '../../../core/ui/confirm-dialog/confirm-dialog';
 import { MemberFormDialog, MemberFormDialogData } from '../member-form-dialog/member-form-dialog';
 import { MemberResponse, MemberSearchCriteria } from '../member.model';
@@ -21,6 +25,13 @@ import { MemberService } from '../member.service';
 
 const DEFAULT_PAGE_SIZE = 20;
 const SEARCH_DEBOUNCE_MS = 300;
+
+// openLoanCount is shown but not sortable: it is not a column on `member` but
+// the result of a grouped query over loans, so the server cannot order by it.
+const COLUMNS = ['name', 'email', 'address', 'phoneNumber', 'openLoanCount', 'actions'] as const;
+
+/** Dropped at tablet width: the longest column, and the least used at the desk. */
+const LOW_PRIORITY_COLUMNS: ReadonlySet<string> = new Set(['address']);
 
 @Component({
   selector: 'app-member-list',
@@ -34,10 +45,12 @@ const SEARCH_DEBOUNCE_MS = 300;
     MatIconModule,
     MatTooltipModule,
     MatProgressBarModule,
+    DecimalPipe,
     TranslatePipe,
   ],
+  host: { class: 'app-page' },
+  providers: [provideTranslatedPaginatorIntl()],
   templateUrl: './member-list.html',
-  styleUrl: './member-list.css',
 })
 export class MemberList {
   private readonly memberService = inject(MemberService);
@@ -74,16 +87,14 @@ export class MemberList {
     () => (this.criteria().sort?.split(',')[1] ?? 'asc') as 'asc' | 'desc' | '',
   );
 
-  // openLoanCount is shown but not sortable: it is not a column on `member` but
-  // the result of a grouped query over loans, so the server cannot order by it.
-  protected readonly displayedColumns = [
-    'name',
-    'email',
-    'address',
-    'phoneNumber',
-    'openLoanCount',
-    'actions',
-  ];
+  /** Counts follow the UI language's number format. */
+  protected readonly locale = inject(I18nService).locale;
+
+  private readonly tablet = breakpointMatches(TABLET_LAYOUT);
+
+  protected readonly displayedColumns = computed(() =>
+    this.tablet() ? COLUMNS.filter((column) => !LOW_PRIORITY_COLUMNS.has(column)) : [...COLUMNS],
+  );
 
   constructor() {
     toObservable(this.request)
@@ -173,6 +184,7 @@ export class MemberList {
       messageKey: 'member.delete.message',
       messageParams: { name: member.name },
       confirmLabelKey: 'common.delete',
+      destructive: true,
     };
     this.dialog
       .open<ConfirmDialog, ConfirmDialogData, boolean>(ConfirmDialog, { data })

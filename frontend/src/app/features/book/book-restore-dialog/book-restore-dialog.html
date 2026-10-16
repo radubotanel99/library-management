@@ -1,13 +1,19 @@
 <h2 mat-dialog-title>{{ 'book.restore.title' | translate }}</h2>
 
 <form [formGroup]="form" (ngSubmit)="submit()">
-  <mat-dialog-content>
+  <div class="app-progress-slot">
+    @if (saving()) {
+      <mat-progress-bar mode="indeterminate" [attr.aria-label]="'common.loading' | translate" />
+    }
+  </div>
+
+  <mat-dialog-content class="app-dialog-content">
     <!--
       Title and author travel with the number on purpose: a book number is unique
       only among ACTIVE copies, so it does not identify a book on its own
       (`DATA_MODEL.md` §4).
     -->
-    <p class="prompt">
+    <p class="app-dialog-prompt">
       {{
         'book.restore.message'
           | translate: { title: book.title, author: book.author, bookNumber: book.bookNumber }

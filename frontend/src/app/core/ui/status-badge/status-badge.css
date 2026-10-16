@@ -1,0 +1,16 @@
+:host {
+  display: inline-flex;
+  vertical-align: middle;
+}
+
+.la-badge {
+  white-space: nowrap;
+}
+
+/* Icon sized to the badge's 16px line (library-components.css .la-badge). */
+.la-badge .mat-icon {
+  width: var(--space-4);
+  height: var(--space-4);
+  font-size: var(--space-4);
+  line-height: 1;
+}
