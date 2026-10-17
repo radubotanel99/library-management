@@ -1,4 +1,4 @@
-A dashboard for the person who runs a library: books, members, loans and what is overdue, in one screen. The look is a library reading room: warm paper, deep crimson cloth bindings, a touch of gold foil. The layout is a calm dark-or-light media dashboard with a fixed sidebar, a hero header, card sections, a live activity panel and an always-on bar along the bottom.
+A dashboard for the person who runs a library: books, members, loans and what is overdue, in one screen. The look is a library reading room seen through frosted glass: warm paper, soft blurred glows and bookshelf, deep crimson gradient accents, a touch of gold foil. The layout is a calm dark-or-light media dashboard with a floating glass sidebar, a hero header, card sections, a live activity panel and an always-on bar along the bottom.
 
 ## Content fundamentals
 
@@ -11,11 +11,14 @@ A dashboard for the person who runs a library: books, members, loans and what is
 
 ## Colour
 
-- Lay every screen on `paper`; put content in `surface` cards with a `line` hairline and `shadow-card`. Use `surface-sunken` for inputs, table headers and row hover.
-- `brand` (deep crimson) is the identity colour. Use it for the one primary action per view, the round Lend button, the library monogram and active tabs. Text on it is always `on-brand`.
+- Lay every screen on `paper`, under the backdrop: three blurred `glow-*` blobs (`glow-rose`, `glow-gold`, `glow-blush`) and a blurred bookshelf washed out by `scrim` / `scrim-strong`. Floating content is **glass**: `glass` fill, backdrop blur, `shadow-float`, no border. Use `glass-strong` where a control must stay legible over the backdrop (secondary buttons, badges, rings) and `glass-hover` for its hover. Use opaque `surface` only where translucency would hurt (menus, dialogs, table bodies) and `surface-sunken` for inputs, table headers and row hover.
+- `line` is now translucent and decorative only (dividers, row rules). Cards are separated by glass and shadow, not by a border.
+- `brand` (deep crimson) is the identity colour. Use it for the one primary action per view, the round Lend button, the library monogram, the current nav item and active tabs. Text on it is always `on-brand`.
+- Brand fills are gradients: `linear-gradient(135deg, brand-bright, brand)` with `shadow-brand` underneath; on hover the gradient shifts to `brand` → `brand-hover`. The hero mark uses the radial version (`brand-bright` to `brand` at 70%). Never use a gradient for anything that is not brand.
+- Stat tiles carry a tint pair on top of glass: rose (default), gold, teal or alert, using the matching `glow-*` and `*-soft` tokens.
 - `brand` never means an error. Overdue and destructive states use `danger`, always with an icon and a word (see StatusBadge). Due soon uses `warning` (amber); available and returned use `success` (teal, so status never relies on red-versus-green alone).
-- The sidebar is the binding: `sidebar` (oxblood in light, near-black in dark), `sidebar-ink` labels, `sidebar-active` for the current page plus a `gold` marker.
-- `gold` is foil: small marks only (the active nav marker, cover bands, decorative spines). Never body text.
+- The sidebar is a glass panel floating beside the content: `sidebar` (same frosted fill as `glass`, blur 24px, `radius-2xl`, `shadow-float`), `sidebar-ink` labels, `sidebar-muted` icons, section labels and counts. `sidebar-active` is only the hover fill; the **current page** is the one crimson object in the sidebar: brand gradient, `on-brand` text, `shadow-brand`. The dark theme keeps the same structure with a dark glass fill.
+- `gold` is foil: small marks only (cover bands, decorative spines). Never body text.
 - Use `brand-text` for red text and links on `paper` and `surface`; it is lighter in dark theme so it stays readable.
 - Every text pair named in a token's usage note meets 4.5:1 in both themes; `line-strong`, `focus` and `gold` meet 3:1 where they mark something.
 
@@ -27,14 +30,16 @@ A dashboard for the person who runs a library: books, members, loans and what is
 
 ## Space, shape, depth
 
-- Spacing steps: `space-1` 4 · `space-2` 8 · `space-3` 12 · `space-4` 16 · `space-6` 24 · `space-8` 32 · `space-12` 48. Cards pad `space-4`; sections sit `space-6` apart.
-- Radii: `radius-sm` for badges, covers and inputs; `radius-md` for rows and nav items; `radius-lg` for cards and panels; `radius-pill` for buttons, search fields, avatars and the Lend button.
-- Depth is quiet: `shadow-card` on cards, `shadow-bar` on the checkout bar, nothing else. No gradients.
+- Spacing steps: `space-1` 4 · `space-2` 8 · `space-3` 12 · `space-4` 16 · `space-5` 20 · `space-6` 24 · `space-8` 32 · `space-10` 40 · `space-12` 48. Panels pad `space-6`; sections sit `space-6` apart.
+- Radii: `radius-sm` for covers and inputs; `radius-md` for row hover; `radius-lg` for nav items and CTA tiles; `radius-xl` for glass surfaces and stat tiles; `radius-2xl` for large panels and the sidebar; `radius-pill` for buttons, badges, search fields, avatars, the hero mark and the Lend button.
+- Depth is soft and floating: `shadow-float` on glass surfaces, `shadow-float-lg` on the largest panels, `shadow-brand` under brand gradients, `shadow-bar` on the checkout bar. `shadow-card` is a legacy alias of `shadow-float`; do not use it in new work.
+- Glass blur: `blur(var(--blur-glass)) saturate(1.2)` (22px). The sidebar uses 24px; glass buttons and bars use 16px. Always include the `-webkit-backdrop-filter` prefix.
+- Gradients are reserved for brand fills (see Colour), the backdrop scrim, book covers, ranked-list bars and the CTA tiles (`*-soft` to `glass-strong`).
 - Focus: a 2px solid `focus` outline with a 2px offset; inside the light sidebar the ring is `sidebar-ink`.
 
 ## Layout
 
-- Dashboard grid: 232px Sidebar · fluid main column · 300px ActivityFeed, with the CheckoutBar fixed across the bottom.
+- Dashboard grid: 248px floating glass Sidebar · fluid main column · 300px ActivityFeed, with the CheckoutBar fixed across the bottom.
 - Main column order: LibraryHeader, four StatTiles, MemberStrip, RankedList, then ReportCards.
 - Below 1200px the activity panel collapses behind a button; below 900px the sidebar becomes a top bar and the checkout bar keeps only the Book no. field and the Lend button.
 
@@ -48,4 +53,5 @@ A dashboard for the person who runs a library: books, members, loans and what is
 ## Using it in Angular Material
 
 - Map `brand` to the primary palette, `danger` to `warn`, and the surfaces and ink to the theme's surface and on-surface roles; keep the dark theme on `[data-theme="dark"]`.
+- `tokens.json` is the source; `frontend/src/styles/tokens.css` is generated from it. Keep the two in step.
 - Copy the token custom properties from `tokens.css` into your global styles and build components on the variables, never on raw hex values.

@@ -1,0 +1,130 @@
+:host {
+  position: relative;
+  display: block;
+  width: min(100%, calc(var(--space-12) * 8));
+}
+
+.search-box {
+  width: 100%;
+}
+
+/* The focus ring goes round the whole pill, not the bare input inside it. */
+.search-box input:focus-visible {
+  outline: none;
+}
+
+.search-box:focus-within {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.search-box input::-webkit-search-cancel-button {
+  cursor: pointer;
+}
+
+/* Results float under the box as one frosted panel. */
+.panel {
+  position: absolute;
+  z-index: 3;
+  top: calc(100% + var(--space-2));
+  left: 0;
+  width: max(100%, calc(var(--space-12) * 10));
+  max-width: calc(100vw - var(--space-12));
+  max-height: 70vh;
+  overflow-y: auto;
+  padding: var(--space-3);
+  border-radius: var(--radius-xl);
+  /* Nearly opaque: the hero text underneath must not show through the results. */
+  background: var(--glass-hover);
+  backdrop-filter: blur(var(--blur-glass)) saturate(1.2);
+  -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(1.2);
+  box-shadow: var(--shadow-float-lg);
+}
+
+.panel__note {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: var(--space-2) var(--space-3);
+  color: var(--ink-muted);
+}
+
+.panel__note--error {
+  color: var(--danger);
+}
+
+.group + .group {
+  margin-top: var(--space-2);
+}
+
+.group__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  padding: var(--space-2) var(--space-3) var(--space-1);
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+
+.group__head a {
+  color: var(--brand-text);
+  text-decoration: none;
+}
+
+.group__head a:hover {
+  text-decoration: underline;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-lg);
+  color: var(--ink);
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+
+.row:hover,
+.row:focus-visible {
+  background: var(--glass-hover);
+}
+
+.row__icon {
+  flex: none;
+  color: var(--ink-muted);
+}
+
+.row__text {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.row__title,
+.row__meta {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.row__title {
+  font-weight: 700;
+}
+
+.row__meta,
+.row__count {
+  font-size: 13px;
+  line-height: 18px;
+  color: var(--ink-muted);
+}
+
+.row__count {
+  flex: none;
+}

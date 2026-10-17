@@ -3,19 +3,30 @@
   --paper: #faf7f2;
   --surface: #ffffff;
   --surface-sunken: #f3eee6;
-  --line: #e6ded2;
+  --line: rgba(120,80,60,0.12);
   --line-strong: #8f857b;
   --ink: #1f1a17;
   --ink-muted: #675e57;
   --brand: #a4161a;
+  --brand-bright: #c0302f;
   --brand-hover: #871115;
   --on-brand: #ffffff;
   --brand-text: #a4161a;
   --brand-soft: #f8e6e4;
-  --sidebar: #5a0e11;
-  --sidebar-ink: #fbefee;
-  --sidebar-muted: #e0b4b2;
-  --sidebar-active: #7a1519;
+  --glass: rgba(255,255,255,0.62);
+  --glass-strong: rgba(255,255,255,0.8);
+  --glass-hover: rgba(255,255,255,0.92);
+  --glow-rose: #f6c9c2;
+  --glow-gold: #f8e3c4;
+  --glow-blush: #f3d4d8;
+  --glow-red: #ffb3ad;
+  --glow-teal: #bfe3dc;
+  --scrim: rgba(250,247,242,0.55);
+  --scrim-strong: rgba(250,247,242,0.92);
+  --sidebar: rgba(255,255,255,0.62);
+  --sidebar-ink: #3d3330;
+  --sidebar-muted: #8a7d76;
+  --sidebar-active: rgba(255,255,255,0.75);
   --gold: #ad7f2a;
   --danger: #c81e1e;
   --danger-soft: #fde7e5;
@@ -26,26 +37,40 @@
   --success-soft: #e0f2ef;
   --neutral-soft: #eeeae4;
   --focus: #1d5fd6;
-  --shadow-card: 0 1px 2px rgba(31,26,23,0.06), 0 6px 16px rgba(31,26,23,0.06);
+  --shadow-card: 0 1px 2px rgba(80,30,20,0.04), 0 12px 32px -8px rgba(120,40,30,0.14);
+  --shadow-float: 0 1px 2px rgba(80,30,20,0.04), 0 12px 32px -8px rgba(120,40,30,0.14);
+  --shadow-float-lg: 0 2px 4px rgba(80,30,20,0.04), 0 24px 60px -16px rgba(120,40,30,0.22);
+  --shadow-brand: 0 12px 26px -10px rgba(164,22,26,0.6);
   --shadow-bar: 0 -6px 20px rgba(31,26,23,0.08);
 }
 [data-theme="dark"] {
   --paper: #131111;
   --surface: #1c1919;
   --surface-sunken: #0e0c0c;
-  --line: #332b2a;
+  --line: rgba(255,240,235,0.08);
   --line-strong: #7a6f6a;
   --ink: #f5efeb;
   --ink-muted: #b5aba5;
   --brand: #c8242a;
+  --brand-bright: #d0383c;
   --brand-hover: #a91d22;
   --on-brand: #ffffff;
   --brand-text: #f08a8c;
   --brand-soft: #3b1618;
-  --sidebar: #0b0909;
+  --glass: rgba(34,29,29,0.62);
+  --glass-strong: rgba(38,33,33,0.82);
+  --glass-hover: rgba(52,45,45,0.9);
+  --glow-rose: #4a1a1c;
+  --glow-gold: #3a2c14;
+  --glow-blush: #3a1a22;
+  --glow-red: #5a1618;
+  --glow-teal: #10302c;
+  --scrim: rgba(19,17,17,0.55);
+  --scrim-strong: rgba(19,17,17,0.92);
+  --sidebar: rgba(34,29,29,0.62);
   --sidebar-ink: #ece4e0;
   --sidebar-muted: #a1958f;
-  --sidebar-active: #2a1416;
+  --sidebar-active: rgba(60,52,52,0.8);
   --gold: #d9a94a;
   --danger: #ff6b6f;
   --danger-soft: #3f1314;
@@ -56,7 +81,10 @@
   --success-soft: #0f2e2b;
   --neutral-soft: #2a2524;
   --focus: #8ab8ff;
-  --shadow-card: 0 1px 2px rgba(0,0,0,0.5);
+  --shadow-card: 0 1px 2px rgba(0,0,0,0.4), 0 12px 32px -8px rgba(0,0,0,0.5);
+  --shadow-float: 0 1px 2px rgba(0,0,0,0.4), 0 12px 32px -8px rgba(0,0,0,0.5);
+  --shadow-float-lg: 0 2px 4px rgba(0,0,0,0.4), 0 24px 60px -16px rgba(0,0,0,0.65);
+  --shadow-brand: 0 12px 26px -10px rgba(200,36,42,0.55);
   --shadow-bar: 0 -6px 20px rgba(0,0,0,0.5);
 }
 :root {
@@ -64,20 +92,25 @@
   --space-2: 8px;
   --space-3: 12px;
   --space-4: 16px;
+  --space-5: 20px;
   --space-6: 24px;
   --space-8: 32px;
+  --space-10: 40px;
   --space-12: 48px;
   --radius-sm: 6px;
   --radius-md: 10px;
   --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-2xl: 28px;
   --radius-pill: 999px;
+  --blur-glass: 22px;
   --font-serif: "Fraunces", Georgia, "Times New Roman", serif;
   --font-sans: "Source Sans 3", "Segoe UI", system-ui, sans-serif;
 }
-.display { font-family: var(--font-serif); font-size: 40px; line-height: 44px; font-weight: 600; letter-spacing: -0.01em; }
-.stat { font-family: var(--font-serif); font-size: 32px; line-height: 36px; font-weight: 600; }
-.h1 { font-family: var(--font-serif); font-size: 28px; line-height: 34px; font-weight: 600; }
-.h2 { font-family: var(--font-serif); font-size: 20px; line-height: 26px; font-weight: 600; }
+.display { font-family: var(--font-serif); font-size: 48px; line-height: 52px; font-weight: 600; letter-spacing: -0.015em; }
+.stat { font-family: var(--font-serif); font-size: 40px; line-height: 44px; font-weight: 600; }
+.h1 { font-family: var(--font-serif); font-size: 34px; line-height: 40px; font-weight: 600; letter-spacing: -0.01em; }
+.h2 { font-family: var(--font-serif); font-size: 22px; line-height: 28px; font-weight: 600; }
 .title { font-family: var(--font-sans); font-size: 15px; line-height: 20px; font-weight: 600; }
 .body { font-family: var(--font-sans); font-size: 14px; line-height: 20px; font-weight: 400; }
 .caption { font-family: var(--font-sans); font-size: 12px; line-height: 16px; font-weight: 400; }

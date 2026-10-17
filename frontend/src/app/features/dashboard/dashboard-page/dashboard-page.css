@@ -1,35 +1,76 @@
-/* Four tiles at most in a row (StatTile README); they wrap to two on a narrow screen. */
-.stats {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(calc(var(--space-12) * 4), 1fr));
-  gap: var(--space-4);
-  margin-bottom: var(--space-6);
+:host {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
 }
 
-.stat-label {
+/* The search sits alone at the top, on the backdrop. */
+.top-bar {
   display: flex;
   align-items: center;
-  gap: var(--space-1);
 }
 
-/* The alert tile's word gets the same colour as its value, plus the icon. */
-.la-stat--alert .stat-label {
-  color: var(--danger);
+.hero-text {
+  min-width: 0;
 }
 
-.stat-alert-icon {
-  width: var(--space-4);
-  height: var(--space-4);
-  font-size: var(--space-4);
+/* Secondary hero action: a glass pill, so only "Lend a book" carries the crimson. */
+.hero-secondary {
+  background: var(--glass-strong);
+  color: var(--ink);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow: var(--shadow-float);
 }
 
-/* No cover and no row action on this list: rank · title/author · count. */
-.most-borrowed .la-ranked li {
-  grid-template-columns: var(--space-6) minmax(0, 1fr) auto;
+/* The progress slot only reserves its line; the gap above does the spacing. */
+.app-progress-slot {
+  margin: calc(var(--space-6) * -1) 0 0;
 }
 
-/* Type comes from the tokens' `label` class; uppercase as the README asks for labels. */
-.count-heading {
-  text-transform: uppercase;
-  color: var(--ink-muted);
+/* Four tiles in a row (StatTile README); two by two at tablet width, one column on a phone. */
+.stats {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: var(--space-5);
+}
+
+.lower {
+  display: grid;
+  grid-template-columns: minmax(0, 1.75fr) minmax(0, 1fr);
+  gap: var(--space-5);
+  align-items: start;
+}
+
+/* Tablet width: the two panels stack. */
+@media (max-width: 1199.98px) {
+  .stats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .lower {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+@media (max-width: 599.98px) {
+  .stats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.ranked-text {
+  min-width: 0;
+}
+
+.loans-now__chart {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-6);
+  margin: var(--space-2) var(--space-1) var(--space-5);
+}
+
+.loans-now__chart .la-legend {
+  flex: 1 1 auto;
 }

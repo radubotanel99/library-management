@@ -37,6 +37,37 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { path: '/settings', labelKey: 'nav.settings', icon: 'settings', exact: false },
 ];
 
+/** One blurred book spine in the backdrop. */
+export interface BackdropSpine {
+  width: number;
+  height: number;
+  /** A design-token custom property, so the backdrop follows the theme. */
+  color: string;
+}
+
+const SPINE_COLORS = [
+  'var(--brand)',
+  'var(--glow-rose)',
+  'var(--gold)',
+  'var(--ink-muted)',
+  'var(--brand-bright)',
+  'var(--success)',
+  'var(--glow-gold)',
+  'var(--brand-hover)',
+  'var(--glow-blush)',
+] as const;
+
+/**
+ * The decorative shelf behind every page: coloured spines, heavily blurred and
+ * washed out by a scrim, so the content floats on a soft "photo" of a bookcase.
+ * Deterministic (no Math.random) so it looks the same on every load and in tests.
+ */
+export const BACKDROP_SPINES: readonly BackdropSpine[] = Array.from({ length: 64 }, (_, i) => ({
+  width: 26 + ((i * 37) % 34),
+  height: 150 + ((i * 53) % 140),
+  color: SPINE_COLORS[(i * 7) % SPINE_COLORS.length],
+}));
+
 /**
  * Application chrome: the design-system Sidebar, the theme toggle and the
  * routed content. Below 900px the sidebar collapses into a top bar whose
@@ -57,6 +88,7 @@ export class Shell {
   private readonly title = inject(Title);
 
   protected readonly navItems = NAV_ITEMS;
+  protected readonly spines = BACKDROP_SPINES;
   protected readonly compact = breakpointMatches(COMPACT_LAYOUT);
   protected readonly menuOpen = signal(false);
 

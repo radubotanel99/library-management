@@ -1,18 +1,27 @@
-import { DecimalPipe } from '@angular/common';
+import { DatePipe, DecimalPipe } from '@angular/common';
 import { Component, computed, inject, OnInit, signal } from '@angular/core';
 import { MatButtonModule } from '@angular/material/button';
+import { MatDialog } from '@angular/material/dialog';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressBarModule } from '@angular/material/progress-bar';
+import { RouterLink } from '@angular/router';
 import { ApiError } from '../../../core/error/api-error';
 import { NotificationService } from '../../../core/error/notification.service';
 import { I18nService } from '../../../core/i18n/i18n.service';
 import { TranslatePipe } from '../../../core/i18n/translate.pipe';
+import { LoanLendDialog } from '../../loan/loan-lend-dialog/loan-lend-dialog';
+import { LoanResponse } from '../../loan/loan.model';
 import { DashboardResponse } from '../dashboard.model';
+import { DashboardSearch } from '../dashboard-search/dashboard-search';
 import { DashboardService } from '../dashboard.service';
 
+/** Generated cover colours for the most-borrowed list, by rank (design-system `la-cover`). */
+const COVER_CLASSES = ['', 'la-cover--ink', 'la-cover--gold', 'la-cover--teal', 'la-cover--oxblood'] as const;
+
 /**
- * The landing screen: four figures (design-system StatTiles) and the
- * most-borrowed list (RankedList), from one request.
+ * The landing screen: a hero with the two desk actions, four figures
+ * (design-system StatTiles), the most-borrowed list (RankedList) and a ring
+ * of open loans split into on time / overdue — all from one request.
  *
  * Nothing here is computed client-side. `loansOverdue` in particular is derived by
  * the backend from `borrowedAt + DAYS_TO_KEEP_A_BOOK` (`API_CONTRACT.md` §10) — a
@@ -24,7 +33,16 @@ import { DashboardService } from '../dashboard.service';
  */
 @Component({
   selector: 'app-dashboard-page',
-  imports: [MatButtonModule, MatIconModule, MatProgressBarModule, DecimalPipe, TranslatePipe],
+  imports: [
+    MatButtonModule,
+    MatIconModule,
+    MatProgressBarModule,
+    RouterLink,
+    DashboardSearch,
+    DatePipe,
+    DecimalPipe,
+    TranslatePipe,
+  ],
   host: { class: 'app-page' },
   templateUrl: './dashboard-page.html',
   styleUrl: './dashboard-page.css',
@@ -32,6 +50,7 @@ import { DashboardService } from '../dashboard.service';
 export class DashboardPage implements OnInit {
   private readonly dashboardService = inject(DashboardService);
   private readonly notifications = inject(NotificationService);
+  private readonly dialog = inject(MatDialog);
 
   protected readonly stats = signal<DashboardResponse | null>(null);
   protected readonly loading = signal(false);
@@ -43,8 +62,48 @@ export class DashboardPage implements OnInit {
   /** The template iterates an array, and the null-before-first-load case is not one. */
   protected readonly mostBorrowed = computed(() => this.stats()?.mostBorrowed ?? []);
 
+  /** Shown above the title; formatted per UI language by DatePipe. */
+  protected readonly today = new Date();
+
+  /** Open loans = on time + overdue, both exactly as the server sent them. */
+  protected readonly openLoans = computed(() => {
+    const stats = this.stats();
+    return stats ? stats.loansActive + stats.loansOverdue : 0;
+  });
+
+  /** Overdue share of the open loans, 0–100, for the ring chart. */
+  protected readonly overduePercent = computed(() => {
+    const open = this.openLoans();
+    return open === 0 ? 0 : ((this.stats()?.loansOverdue ?? 0) / open) * 100;
+  });
+
+  private readonly maxLoanCount = computed(() =>
+    Math.max(1, ...this.mostBorrowed().map((book) => book.loanCount)),
+  );
+
   ngOnInit(): void {
     this.load();
+  }
+
+  /** Bar length relative to the most-borrowed book, so the leader fills its bar. */
+  protected barWidth(loanCount: number): number {
+    return (loanCount / this.maxLoanCount()) * 100;
+  }
+
+  protected coverClass(rank: number): string {
+    return COVER_CLASSES[rank % COVER_CLASSES.length];
+  }
+
+  /** The same lend dialog as the loans screen; the figures refresh after a loan is made. */
+  protected openLendDialog(): void {
+    this.dialog
+      .open<LoanLendDialog, undefined, LoanResponse>(LoanLendDialog)
+      .afterClosed()
+      .subscribe((created) => {
+        if (created) {
+          this.load();
+        }
+      });
   }
 
   protected load(): void {

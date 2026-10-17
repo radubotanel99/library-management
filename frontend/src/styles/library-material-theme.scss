@@ -99,10 +99,11 @@ html {
   ));
 }
 
-// Tables: surface cards, sunken header row, hairline rules, a denser row than M3's 52px.
+// Tables sit inside glass cards: transparent background so the card's frosted glass shows
+// through, soft hairline rules, a denser row than M3's 52px.
 html {
   @include mat.table-overrides((
-    background-color: var(--surface),
+    background-color: transparent,
     header-headline-color: var(--ink-muted),
     row-item-label-text-color: var(--ink),
     row-item-outline-color: var(--line),
@@ -113,8 +114,69 @@ html {
   ));
 
   @include mat.paginator-overrides((
-    container-background-color: var(--surface),
+    container-background-color: transparent,
     container-text-color: var(--ink-muted),
     container-text-font: var(--font-sans),
   ));
+}
+
+// Floating glass: dialogs, menus and select panels are frosted panels with soft shadows,
+// form fields are soft rounded wells. No hard edges beyond what a control needs (3:1 outline).
+html {
+  @include mat.dialog-overrides((
+    container-color: var(--glass-strong),
+    container-shape: var(--radius-2xl),
+    container-elevation-shadow: var(--shadow-float-lg),
+  ));
+
+  @include mat.form-field-overrides((
+    outlined-container-shape: var(--radius-lg),
+    outlined-outline-color: var(--line-strong),
+  ));
+
+  @include mat.select-overrides((
+    panel-background-color: var(--glass-strong),
+  ));
+
+  @include mat.autocomplete-overrides((
+    background-color: var(--glass-strong),
+  ));
+
+  @include mat.menu-overrides((
+    container-color: var(--glass-strong),
+    container-shape: var(--radius-lg),
+  ));
+
+  @include mat.progress-bar-overrides((
+    active-indicator-color: var(--brand),
+    track-color: var(--brand-soft),
+  ));
+}
+
+// The frosted look needs a backdrop blur, which Material has no token for.
+.mat-mdc-dialog-surface,
+.mat-mdc-select-panel,
+.mat-mdc-autocomplete-panel,
+.mat-mdc-menu-panel {
+  backdrop-filter: blur(var(--blur-glass)) saturate(1.2);
+  -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(1.2);
+}
+
+// Softer, warmer scrim behind dialogs: the page stays visible, blurred.
+.cdk-overlay-dark-backdrop {
+  background: var(--scrim);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+// Outlined fields get a light glass fill so they read as wells on a glass card.
+.mat-mdc-form-field.mat-form-field-appearance-outline .mat-mdc-text-field-wrapper {
+  background: var(--glass-strong);
+  border-radius: var(--radius-lg);
+}
+
+// Filled buttons (the primary action of a view) carry the crimson gradient and a soft glow.
+.mat-mdc-unelevated-button:not(:disabled) {
+  background-image: linear-gradient(135deg, var(--brand-bright), var(--brand));
+  box-shadow: var(--shadow-brand);
 }

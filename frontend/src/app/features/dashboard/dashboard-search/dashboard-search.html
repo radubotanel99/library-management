@@ -1,0 +1,101 @@
+<label class="la la-search search-box">
+  <mat-icon aria-hidden="true">search</mat-icon>
+  <input
+    type="search"
+    autocomplete="off"
+    [value]="query()"
+    [placeholder]="'dashboard.search.placeholder' | translate"
+    [attr.aria-label]="'dashboard.search.placeholder' | translate"
+    aria-controls="dashboard-search-results"
+    [attr.aria-expanded]="showPanel()"
+    (input)="onInput($event)"
+    (focus)="onFocus()"
+  />
+</label>
+
+@if (showPanel()) {
+  <div id="dashboard-search-results" class="la panel" role="region" aria-live="polite"
+       [attr.aria-label]="'dashboard.search.results' | translate">
+    @switch (state().kind) {
+      @case ('loading') {
+        <mat-progress-bar mode="indeterminate" [attr.aria-label]="'common.loading' | translate" />
+        <p class="panel__note">{{ 'dashboard.search.searching' | translate }}</p>
+      }
+      @case ('failed') {
+        <p class="panel__note panel__note--error">
+          <mat-icon aria-hidden="true">error</mat-icon>
+          {{ 'dashboard.search.error' | translate }}
+        </p>
+      }
+      @case ('idle') {
+        <p class="panel__note">{{ 'dashboard.search.searching' | translate }}</p>
+      }
+    }
+
+    @if (empty()) {
+      <p class="panel__note">{{ 'dashboard.search.noResults' | translate: { query: query().trim() } }}</p>
+    }
+
+    @if (results(); as found) {
+      @if (found.books.length) {
+        <div class="group">
+          <div class="group__head">
+            <span>{{ 'dashboard.search.books' | translate }}</span>
+            <a routerLink="/books" (click)="close()">{{ 'dashboard.search.openList' | translate }}</a>
+          </div>
+          <!-- Number, title and author together: a number alone is not unique (`DATA_MODEL.md` §4). -->
+          @for (book of found.books; track book.id) {
+            <a class="row" routerLink="/books" (click)="close()">
+              <mat-icon class="row__icon" aria-hidden="true">menu_book</mat-icon>
+              <span class="row__text">
+                <span class="row__title">{{ book.title }}</span>
+                <span class="row__meta">{{ book.author }} · {{ 'dashboard.search.number' | translate: { number: book.bookNumber } }}</span>
+              </span>
+              <app-status-badge [bookStatus]="book.status" [onLoan]="book.onLoan" />
+            </a>
+          }
+        </div>
+      }
+
+      @if (found.members.length) {
+        <div class="group">
+          <div class="group__head">
+            <span>{{ 'dashboard.search.members' | translate }}</span>
+            <a routerLink="/members" (click)="close()">{{ 'dashboard.search.openList' | translate }}</a>
+          </div>
+          @for (member of found.members; track member.id) {
+            <a class="row" routerLink="/members" (click)="close()">
+              <mat-icon class="row__icon" aria-hidden="true">person</mat-icon>
+              <span class="row__text">
+                <span class="row__title">{{ member.name }}</span>
+                <span class="row__meta">{{ member.email || member.phoneNumber || ('common.notSet' | translate) }}</span>
+              </span>
+              <span class="row__count">
+                {{ 'dashboard.search.openLoans' | translate: { count: member.openLoanCount } }}
+              </span>
+            </a>
+          }
+        </div>
+      }
+
+      @if (found.loans.length) {
+        <div class="group">
+          <div class="group__head">
+            <span>{{ 'dashboard.search.loans' | translate }}</span>
+            <a routerLink="/loans" (click)="close()">{{ 'dashboard.search.openList' | translate }}</a>
+          </div>
+          @for (loan of found.loans; track loan.id) {
+            <a class="row" routerLink="/loans" (click)="close()">
+              <mat-icon class="row__icon" aria-hidden="true">swap_horiz</mat-icon>
+              <span class="row__text">
+                <span class="row__title">{{ loan.bookTitle }}</span>
+                <span class="row__meta">{{ loan.memberName }} · {{ 'dashboard.search.number' | translate: { number: loan.bookNumber } }}</span>
+              </span>
+              <app-status-badge [loanState]="loan.state" />
+            </a>
+          }
+        </div>
+      }
+    }
+  </div>
+}

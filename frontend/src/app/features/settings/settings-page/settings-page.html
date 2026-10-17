@@ -23,7 +23,7 @@
       </div>
     } @else {
       <form class="settings-form" [formGroup]="form" (ngSubmit)="submit()">
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
           <mat-label>{{ 'settings.daysToKeepABook.label' | translate }}</mat-label>
           <input matInput formControlName="daysToKeepABook" inputmode="numeric" />
           <mat-hint>{{ 'settings.daysToKeepABook.hint' | translate }}</mat-hint>
@@ -38,7 +38,7 @@
           }
         </mat-form-field>
 
-        <mat-form-field appearance="outline">
+        <mat-form-field appearance="outline" subscriptSizing="dynamic">
           <mat-label>{{ 'settings.maxBooksPerMember.label' | translate }}</mat-label>
           <input matInput formControlName="maxBooksPerMember" inputmode="numeric" />
           <mat-hint>{{ 'settings.maxBooksPerMember.hint' | translate }}</mat-hint>

@@ -1,5 +1,28 @@
-<header class="app-page__header">
-  <h1 class="h1">{{ 'dashboard.title' | translate }}</h1>
+<!-- Quick look-up across books, members and open loans: dashboard only. -->
+<div class="top-bar">
+  <app-dashboard-search />
+</div>
+
+<!-- The hero sits straight on the backdrop: no card around it. -->
+<header class="la la-hero hero">
+  <div class="la-hero__mark" aria-hidden="true">
+    <mat-icon>local_library</mat-icon>
+  </div>
+  <div class="hero-text">
+    <div class="la-hero__eyebrow">{{ today | date: 'fullDate' : undefined : locale() }}</div>
+    <h1 class="la-hero__name">{{ 'dashboard.title' | translate }}</h1>
+    <p class="la-hero__lead">{{ 'dashboard.lead' | translate }}</p>
+  </div>
+  <div class="la-hero__actions">
+    <a matButton="tonal" class="hero-secondary" routerLink="/loans">
+      <mat-icon aria-hidden="true">swap_horiz</mat-icon>
+      {{ 'dashboard.viewLoans' | translate }}
+    </a>
+    <button matButton="filled" (click)="openLendDialog()">
+      <mat-icon aria-hidden="true">add</mat-icon>
+      {{ 'dashboard.lend' | translate }}
+    </button>
+  </div>
 </header>
 
 <div class="app-progress-slot">
@@ -9,25 +32,24 @@
 </div>
 
 @if (loadFailed()) {
-  <div class="app-state app-state--error" role="alert">
-    <mat-icon class="app-state__icon" aria-hidden="true">error</mat-icon>
-    <p>{{ 'dashboard.loadError' | translate }}</p>
-    <button matButton="outlined" (click)="load()">{{ 'common.retry' | translate }}</button>
+  <div class="app-card">
+    <div class="app-state app-state--error" role="alert">
+      <mat-icon class="app-state__icon" aria-hidden="true">error</mat-icon>
+      <p>{{ 'dashboard.loadError' | translate }}</p>
+      <button matButton="outlined" (click)="load()">{{ 'common.retry' | translate }}</button>
+    </div>
   </div>
-} @else if (!loading() && stats(); as data) {
+} @else if (stats(); as data) {
   <section class="la stats">
     <!--
       Active copies only: a lost or withdrawn book is on the archive screen, not
       on the shelf (`DATA_MODEL.md` §4.1).
     -->
     <div class="la-stat">
+      <div class="la-stat__icon"><mat-icon aria-hidden="true">menu_book</mat-icon></div>
       <div class="la-stat__label">{{ 'dashboard.totalCopies' | translate }}</div>
       <div class="la-stat__value">{{ data.totalCopies | number: '1.0-0' : locale() }}</div>
-    </div>
-
-    <div class="la-stat">
-      <div class="la-stat__label">{{ 'dashboard.totalMembers' | translate }}</div>
-      <div class="la-stat__value">{{ data.totalMembers | number: '1.0-0' : locale() }}</div>
+      <div class="la-stat__delta">{{ 'dashboard.totalCopies.hint' | translate }}</div>
     </div>
 
     <!--
@@ -36,9 +58,11 @@
       `loan.state` column (`API_CONTRACT.md` §10), so recomputing either here
       would only reintroduce the staleness the backend just removed.
     -->
-    <div class="la-stat">
+    <div class="la-stat la-stat--gold">
+      <div class="la-stat__icon"><mat-icon aria-hidden="true">swap_horiz</mat-icon></div>
       <div class="la-stat__label">{{ 'dashboard.loansActive' | translate }}</div>
       <div class="la-stat__value">{{ data.loansActive | number: '1.0-0' : locale() }}</div>
+      <div class="la-stat__delta">{{ 'dashboard.loansActive.hint' | translate }}</div>
     </div>
 
     <!--
@@ -46,58 +70,115 @@
       tile that turns `danger` — only when there is something to act on, and
       with a warning icon beside the word so colour never carries it alone.
     -->
-    <div class="la-stat" [class.la-stat--alert]="data.loansOverdue > 0">
-      <div class="la-stat__label stat-label">
-        @if (data.loansOverdue > 0) {
-          <mat-icon class="stat-alert-icon" aria-hidden="true">warning</mat-icon>
-        }
-        {{ 'dashboard.loansOverdue' | translate }}
+    <div class="la-stat" [class.la-stat--alert]="data.loansOverdue > 0" [class.la-stat--teal]="data.loansOverdue === 0">
+      <div class="la-stat__icon">
+        <mat-icon aria-hidden="true">{{ data.loansOverdue > 0 ? 'warning' : 'task_alt' }}</mat-icon>
       </div>
+      <div class="la-stat__label">{{ 'dashboard.loansOverdue' | translate }}</div>
       <div class="la-stat__value">{{ data.loansOverdue | number: '1.0-0' : locale() }}</div>
-    </div>
-  </section>
-
-  <section class="la app-card app-card--padded most-borrowed">
-    <div class="la-section">
-      <h2>{{ 'dashboard.mostBorrowed.title' | translate }}</h2>
-      @if (mostBorrowed().length > 0) {
-        <!-- Column heading for the counts; each row repeats it for screen readers. -->
-        <span class="label count-heading" aria-hidden="true">
-          {{ 'dashboard.mostBorrowed.column.loanCount' | translate }}
-        </span>
-      }
-    </div>
-
-    <!-- A library that has lent nothing yet is a real state, not an edge case. -->
-    @if (mostBorrowed().length === 0) {
-      <div class="app-state">
-        <mat-icon aria-hidden="true">menu_book</mat-icon>
-        <p>{{ 'dashboard.mostBorrowed.empty' | translate }}</p>
+      <div class="la-stat__delta">
+        {{ (data.loansOverdue > 0 ? 'dashboard.loansOverdue.hint' : 'dashboard.loansOverdue.none') | translate }}
       </div>
-    } @else {
-      <ol class="la-ranked">
-        <!--
-          Title and author, never the book number: a number is unique only among
-          active copies, so it does not identify a book to a human
-          (`DATA_MODEL.md` §4).
-        -->
-        @for (book of mostBorrowed(); track book.bookId; let rank = $index) {
-          <li>
-            <span class="la-ranked__n" aria-hidden="true">{{ rank + 1 }}</span>
-            <div>
-              <div class="la-ranked__t">{{ book.title }}</div>
-              <div class="la-ranked__m">{{ book.author }}</div>
-            </div>
-            <!-- All-time, and returned loans count towards it too. -->
-            <span class="la-ranked__c">
-              <span class="app-visually-hidden">
-                {{ 'dashboard.mostBorrowed.column.loanCount' | translate }}
-              </span>
-              <b>{{ book.loanCount | number: '1.0-0' : locale() }}</b>
-            </span>
-          </li>
-        }
-      </ol>
-    }
+    </div>
+
+    <div class="la-stat la-stat--teal">
+      <div class="la-stat__icon"><mat-icon aria-hidden="true">group</mat-icon></div>
+      <div class="la-stat__label">{{ 'dashboard.totalMembers' | translate }}</div>
+      <div class="la-stat__value">{{ data.totalMembers | number: '1.0-0' : locale() }}</div>
+      <div class="la-stat__delta">{{ 'dashboard.totalMembers.hint' | translate }}</div>
+    </div>
   </section>
+
+  <div class="lower">
+    <section class="la la-panel most-borrowed">
+      <div class="la-section">
+        <h2>{{ 'dashboard.mostBorrowed.title' | translate }}</h2>
+        <a routerLink="/books">{{ 'dashboard.mostBorrowed.allBooks' | translate }}</a>
+      </div>
+
+      <!-- A library that has lent nothing yet is a real state, not an edge case. -->
+      @if (mostBorrowed().length === 0) {
+        <div class="app-state">
+          <mat-icon aria-hidden="true">menu_book</mat-icon>
+          <p>{{ 'dashboard.mostBorrowed.empty' | translate }}</p>
+        </div>
+      } @else {
+        <ol class="la-ranked">
+          <!--
+            Title and author, never the book number alone: a number is unique only
+            among active copies, so it does not identify a book to a human
+            (`DATA_MODEL.md` §4).
+          -->
+          @for (book of mostBorrowed(); track book.bookId; let rank = $index) {
+            <li>
+              <span class="la-ranked__n" aria-hidden="true">{{ rank + 1 }}</span>
+              <span class="la-cover" [class]="coverClass(rank)" aria-hidden="true"></span>
+              <div class="ranked-text">
+                <div class="la-ranked__t">{{ book.title }}</div>
+                <div class="la-ranked__m">{{ book.author }}</div>
+              </div>
+              <!-- Relative to the most-borrowed book, so the leader always fills the bar. -->
+              <div class="la-ranked__bar" aria-hidden="true">
+                <span [style.width.%]="barWidth(book.loanCount)"></span>
+              </div>
+              <!-- All-time, and returned loans count towards it too. -->
+              <span class="la-ranked__c">
+                <b>{{ book.loanCount | number: '1.0-0' : locale() }}</b>
+                {{ 'dashboard.mostBorrowed.loans' | translate }}
+              </span>
+            </li>
+          }
+        </ol>
+      }
+    </section>
+
+    <!-- Built only from loansActive and loansOverdue: no extra request, nothing recomputed. -->
+    <section class="la la-panel loans-now">
+      <div class="la-section">
+        <h2>{{ 'dashboard.loansNow.title' | translate }}</h2>
+      </div>
+
+      <div class="loans-now__chart">
+        <div class="la-ring" [class.la-ring--empty]="openLoans() === 0" [style.--la-part]="overduePercent()">
+          <div class="la-ring__c">
+            <div>
+              <b>{{ openLoans() | number: '1.0-0' : locale() }}</b>
+              <span>{{ 'dashboard.loansNow.open' | translate }}</span>
+            </div>
+          </div>
+        </div>
+        <div class="la-legend">
+          <div>
+            <span class="la-dot" aria-hidden="true"></span>
+            {{ 'dashboard.loansNow.onTime' | translate }}
+            <b>{{ data.loansActive | number: '1.0-0' : locale() }}</b>
+          </div>
+          <div>
+            <span class="la-dot la-dot--danger" aria-hidden="true"></span>
+            {{ 'dashboard.loansNow.overdue' | translate }}
+            <b>{{ data.loansOverdue | number: '1.0-0' : locale() }}</b>
+          </div>
+        </div>
+      </div>
+
+      @if (data.loansOverdue > 0) {
+        <a class="la-cta" routerLink="/loans">
+          <span class="la-cta__icon"><mat-icon aria-hidden="true">warning</mat-icon></span>
+          <span class="la-cta__text">
+            <b>{{ 'dashboard.loansNow.overdueCta' | translate: { count: data.loansOverdue } }}</b>
+            {{ 'dashboard.loansNow.overdueCtaHint' | translate }}
+          </span>
+          <mat-icon class="la-cta__go" aria-hidden="true">chevron_right</mat-icon>
+        </a>
+      } @else {
+        <div class="la-cta la-cta--ok">
+          <span class="la-cta__icon"><mat-icon aria-hidden="true">task_alt</mat-icon></span>
+          <span class="la-cta__text">
+            <b>{{ 'dashboard.loansNow.allClear' | translate }}</b>
+            {{ 'dashboard.loansNow.allClearHint' | translate }}
+          </span>
+        </div>
+      }
+    </section>
+  </div>
 }

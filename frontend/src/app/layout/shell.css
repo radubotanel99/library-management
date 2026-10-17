@@ -1,14 +1,92 @@
 :host {
+  position: relative;
   display: flex;
   min-height: 100vh;
+  isolation: isolate;
 }
 
-/* Fixed beside the content on a wide screen: the binding of the book. */
+/* ---------- Backdrop: soft glows + a blurred bookshelf under a scrim ---------- */
+
+.app-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.app-backdrop__glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(90px);
+  opacity: 0.55;
+}
+
+.app-backdrop__glow--rose {
+  width: 620px;
+  height: 620px;
+  left: -160px;
+  top: -200px;
+  background: var(--glow-rose);
+}
+
+.app-backdrop__glow--gold {
+  width: 520px;
+  height: 520px;
+  right: -120px;
+  top: 120px;
+  background: var(--glow-gold);
+}
+
+.app-backdrop__glow--blush {
+  width: 700px;
+  height: 500px;
+  left: 30%;
+  bottom: -260px;
+  background: var(--glow-blush);
+}
+
+/* The shelf fills the top of the screen and fades out downwards. */
+.app-backdrop__shelf {
+  position: absolute;
+  left: -40px;
+  right: -40px;
+  top: 0;
+  height: 470px;
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+  padding-bottom: 110px;
+  overflow: hidden;
+  filter: blur(14px) saturate(1.1);
+  opacity: 0.8;
+  -webkit-mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
+  mask-image: linear-gradient(180deg, #000 55%, transparent 100%);
+}
+
+.app-backdrop__shelf i {
+  display: block;
+  flex: none;
+  border-radius: 6px 6px 0 0;
+}
+
+/* Washes the shelf out so text on top stays readable; strongest on the left, behind titles. */
+.app-backdrop__scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(180deg, var(--scrim) 0%, var(--scrim) 40%, transparent 70%),
+    linear-gradient(90deg, var(--scrim-strong) 0%, var(--scrim) 45%, transparent 100%);
+}
+
+/* ---------- Sidebar: floats beside the content with a gutter all round ---------- */
+
 .app-sidebar {
   position: sticky;
-  top: 0;
+  top: var(--space-4);
   flex: none;
-  height: 100vh;
+  height: calc(100vh - var(--space-8));
+  margin: var(--space-4) 0 var(--space-4) var(--space-4);
   overflow-y: auto;
 }
 
@@ -20,7 +98,6 @@
 }
 
 .app-sidebar__brand {
-  color: inherit;
   text-decoration: none;
 }
 
@@ -31,17 +108,17 @@
   gap: var(--space-1);
 }
 
-/* Thin rule that groups the daily screens apart from archive and settings. */
+/* A soft gap rather than a rule groups the daily screens apart from archive and settings. */
 .app-sidebar__divider {
-  margin-block: var(--space-2);
-  border-top: 1px solid var(--sidebar-active);
+  margin: var(--space-2) var(--space-4);
+  height: 1px;
+  background: var(--line);
 }
 
 /* Pushes the theme toggle to the bottom of the sidebar. */
 .app-sidebar__footer {
   margin-top: auto;
   padding-top: var(--space-4);
-  border-top: 1px solid var(--sidebar-active);
 }
 
 /* Buttons that wear the nav-item look (theme toggle, menu toggle). */
@@ -55,31 +132,38 @@
   cursor: pointer;
 }
 
+.app-sidebar__footer .app-sidebar__button {
+  background: var(--sidebar-active);
+}
+
 .app-main {
   flex: 1 1 auto;
   min-width: 0;
 }
 
-/* ---------- Below 900px: the sidebar becomes a top bar ---------- */
+/* ---------- Below 900px: the sidebar becomes a floating top bar ---------- */
 
 :host(.app-shell--compact) {
   flex-direction: column;
 }
 
 :host(.app-shell--compact) .app-sidebar {
+  top: var(--space-2);
   z-index: 2;
   width: auto;
   height: auto;
-  max-height: 100vh;
+  max-height: calc(100vh - var(--space-4));
+  margin: var(--space-2) var(--space-2) 0;
   padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-xl);
 }
 
 :host(.app-shell--compact) .app-sidebar__brand {
-  padding: 0 var(--space-3);
+  padding: 0 var(--space-2);
 }
 
 :host(.app-shell--compact) .app-sidebar__links {
-  padding-bottom: var(--space-2);
+  padding: var(--space-2) 0;
 }
 
 :host(.app-shell--compact) .app-sidebar__menu-toggle {

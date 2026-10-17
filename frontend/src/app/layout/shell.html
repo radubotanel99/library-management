@@ -1,3 +1,16 @@
+<!-- Decorative only: a soft, blurred "photo" of a bookshelf that every page floats on. -->
+<div class="app-backdrop" aria-hidden="true">
+  <div class="app-backdrop__glow app-backdrop__glow--rose"></div>
+  <div class="app-backdrop__glow app-backdrop__glow--gold"></div>
+  <div class="app-backdrop__glow app-backdrop__glow--blush"></div>
+  <div class="app-backdrop__shelf">
+    @for (spine of spines; track $index) {
+      <i [style.width.px]="spine.width" [style.height.px]="spine.height" [style.background]="spine.color"></i>
+    }
+  </div>
+  <div class="app-backdrop__scrim"></div>
+</div>
+
 <nav class="la la-sidebar app-sidebar" [attr.aria-label]="'nav.main' | translate">
   <div class="app-sidebar__top">
     <a class="la-sidebar__brand app-sidebar__brand" routerLink="/dashboard" (click)="closeMenu()">

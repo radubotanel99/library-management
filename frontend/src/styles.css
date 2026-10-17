@@ -15,7 +15,7 @@ html {
 body {
   margin: 0;
   height: 100%;
-  background: var(--paper);
+  background-color: var(--paper);
   color: var(--ink);
   font-family: var(--font-sans);
 }
@@ -33,7 +33,7 @@ body {
 
 .app-page {
   display: block;
-  padding: var(--space-6);
+  padding: var(--space-8) var(--space-10) var(--space-10);
 }
 
 .app-page__header {
@@ -49,16 +49,27 @@ body {
   margin: 0;
 }
 
-/* A surface card: tables, forms and lists sit in one of these on the paper background. */
+/* Page titles sit straight on the backdrop, set large in the serif. */
+.app-page__header .h1 {
+  font-size: 40px;
+  line-height: 46px;
+  letter-spacing: -0.015em;
+}
+
+/*
+ * A floating glass card: tables, forms and lists sit in one of these on the
+ * backdrop. No border — translucency and a soft shadow separate it.
+ */
 .app-card {
-  background: var(--surface);
-  border: 1px solid var(--line);
-  border-radius: var(--radius-lg);
-  box-shadow: var(--shadow-card);
+  background: var(--glass);
+  backdrop-filter: blur(var(--blur-glass)) saturate(1.2);
+  -webkit-backdrop-filter: blur(var(--blur-glass)) saturate(1.2);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-float-lg);
 }
 
 .app-card--padded {
-  padding: var(--space-4);
+  padding: var(--space-6);
 }
 
 .app-section + .app-section {
@@ -72,7 +83,8 @@ body {
 /* Wide tables scroll inside their card instead of pushing the page sideways on a tablet. */
 .app-table-scroll {
   overflow-x: auto;
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-2xl) var(--radius-2xl) 0 0;
+  padding: var(--space-2) var(--space-3) 0;
 }
 
 /* ---------- Filters above a table ---------- */
@@ -134,7 +146,7 @@ body {
 }
 
 .app-table .mat-mdc-header-row {
-  background: var(--surface-sunken);
+  background: transparent;
 }
 
 /* Header cells use the design system's `label` style (tokens.css .label) plus uppercase. */
@@ -145,8 +157,21 @@ body {
   text-transform: uppercase;
 }
 
+.app-table .mat-mdc-row {
+  transition: background-color 0.15s ease;
+}
+
+/* Hovered row lifts into a lighter glass strip instead of a grey band. */
 .app-table .mat-mdc-row:hover {
-  background: var(--surface-sunken);
+  background: var(--glass-hover);
+}
+
+.app-table .mat-mdc-row:hover .mat-mdc-cell:first-child {
+  border-radius: var(--radius-lg) 0 0 var(--radius-lg);
+}
+
+.app-table .mat-mdc-row:hover .mat-mdc-cell:last-child {
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
 }
 
 .app-table .mat-mdc-row:last-child .mat-mdc-cell {
@@ -168,8 +193,8 @@ body {
 }
 
 .app-paginator {
-  border-top: 1px solid var(--line);
-  border-radius: 0 0 var(--radius-lg) var(--radius-lg);
+  border-radius: 0 0 var(--radius-2xl) var(--radius-2xl);
+  padding: 0 var(--space-3);
 }
 
 /* Read by screen readers, not shown (e.g. a column heading repeated per row). */
@@ -209,4 +234,22 @@ body {
 /* A sortable numeric header lines its label up with the right-aligned figures below it. */
 .app-cell--num .mat-sort-header-container {
   justify-content: flex-end;
+}
+
+/* Dialog titles in the serif, like page titles. */
+.mat-mdc-dialog-title.mdc-dialog__title {
+  font-family: var(--font-serif);
+  font-weight: 600;
+}
+
+/* Keyboard focus stays visible on glass (design system: 2px solid, 2px offset). */
+:focus-visible {
+  outline: 2px solid var(--focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition: none !important;
+  }
 }
