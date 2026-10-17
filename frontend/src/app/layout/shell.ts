@@ -19,6 +19,8 @@ export interface NavItem {
    * Books and Archive.
    */
   exact: boolean;
+  /** Draws a divider above this item, to start a new group. */
+  dividerBefore?: boolean;
 }
 
 /**
@@ -31,7 +33,7 @@ export const NAV_ITEMS: readonly NavItem[] = [
   { path: '/categories', labelKey: 'nav.categories', icon: 'sell', exact: false },
   { path: '/members', labelKey: 'nav.members', icon: 'group', exact: false },
   { path: '/loans', labelKey: 'nav.loans', icon: 'swap_horiz', exact: false },
-  { path: '/books/archive', labelKey: 'nav.archive', icon: 'inventory_2', exact: false },
+  { path: '/books/archive', labelKey: 'nav.archive', icon: 'inventory_2', exact: false, dividerBefore: true },
   { path: '/settings', labelKey: 'nav.settings', icon: 'settings', exact: false },
 ];
 

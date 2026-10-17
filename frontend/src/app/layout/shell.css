@@ -31,6 +31,12 @@
   gap: var(--space-1);
 }
 
+/* Thin rule that groups the daily screens apart from archive and settings. */
+.app-sidebar__divider {
+  margin-block: var(--space-2);
+  border-top: 1px solid var(--sidebar-active);
+}
+
 /* Pushes the theme toggle to the bottom of the sidebar. */
 .app-sidebar__footer {
   margin-top: auto;

@@ -22,6 +22,9 @@
   @if (linksVisible()) {
     <div id="app-sidebar-links" class="app-sidebar__links">
       @for (item of navItems; track item.path) {
+        @if (item.dividerBefore) {
+          <div class="app-sidebar__divider" role="separator"></div>
+        }
         <a
           class="la-nav"
           [routerLink]="item.path"
