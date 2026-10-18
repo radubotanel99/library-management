@@ -5,7 +5,7 @@
  * `ro.ts` is forced by the compiler to provide every key.
  */
 export const en = {
-  'app.title': 'Library Management',
+  'app.title': 'My Library',
 
   'nav.dashboard': 'Dashboard',
   'nav.categories': 'Categories',
@@ -18,8 +18,8 @@ export const en = {
   'nav.menu': 'Menu',
 
   // The toggle names the action it performs, not the theme currently shown.
-  'theme.switchToDark': 'Switch to dark theme',
-  'theme.switchToLight': 'Switch to light theme',
+  'theme.switchToDark': 'Dark theme',
+  'theme.switchToLight': 'Light theme',
 
   'common.language': 'Language',
   'common.actions': 'Actions',
@@ -69,7 +69,6 @@ export const en = {
   'dashboard.mostBorrowed.allBooks': 'All books',
   'dashboard.mostBorrowed.loans': 'loans',
   'dashboard.loansNow.title': 'Loans right now',
-  'dashboard.loansNow.open': 'open loans',
   'dashboard.loansNow.onTime': 'On time',
   'dashboard.loansNow.overdue': 'Overdue',
   'dashboard.loansNow.overdueCta': '{{count}} overdue loans',

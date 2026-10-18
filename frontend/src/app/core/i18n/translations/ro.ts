@@ -7,7 +7,7 @@ import { TranslationKey } from './translation-key';
  * and forgotten here is a compile error, not a missing string at runtime.
  */
 export const ro: Record<TranslationKey, string> = {
-  'app.title': 'Gestiune bibliotecă',
+  'app.title': 'Biblioteca Mea',
 
   'nav.dashboard': 'Panou',
   'nav.categories': 'Categorii',
@@ -19,8 +19,8 @@ export const ro: Record<TranslationKey, string> = {
   'nav.main': 'Navigare principală',
   'nav.menu': 'Meniu',
 
-  'theme.switchToDark': 'Treci la tema întunecată',
-  'theme.switchToLight': 'Treci la tema luminoasă',
+  'theme.switchToDark': 'Tema întunecată',
+  'theme.switchToLight': 'Tema luminoasă',
 
   'common.language': 'Limbă',
   'common.actions': 'Acțiuni',
@@ -68,7 +68,6 @@ export const ro: Record<TranslationKey, string> = {
   'dashboard.mostBorrowed.allBooks': 'Toate cărțile',
   'dashboard.mostBorrowed.loans': 'împrumuturi',
   'dashboard.loansNow.title': 'Împrumuturi acum',
-  'dashboard.loansNow.open': 'împrumuturi deschise',
   'dashboard.loansNow.onTime': 'La timp',
   'dashboard.loansNow.overdue': 'Întârziate',
   'dashboard.loansNow.overdueCta': '{{count}} împrumuturi întârziate',
