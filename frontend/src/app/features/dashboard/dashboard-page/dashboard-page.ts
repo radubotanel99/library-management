@@ -12,6 +12,7 @@ import { TranslatePipe } from '../../../core/i18n/translate.pipe';
 import { LoanLendDialog } from '../../loan/loan-lend-dialog/loan-lend-dialog';
 import { LoanResponse } from '../../loan/loan.model';
 import { DashboardResponse } from '../dashboard.model';
+import { DashboardHeroArt } from '../dashboard-hero-art/dashboard-hero-art';
 import { DashboardSearch } from '../dashboard-search/dashboard-search';
 import { DashboardService } from '../dashboard.service';
 
@@ -39,6 +40,7 @@ const COVER_CLASSES = ['', 'la-cover--ink', 'la-cover--gold', 'la-cover--teal', 
     MatProgressBarModule,
     RouterLink,
     DashboardSearch,
+    DashboardHeroArt,
     DatePipe,
     DecimalPipe,
     TranslatePipe,

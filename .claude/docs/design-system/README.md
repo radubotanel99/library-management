@@ -37,11 +37,25 @@ A dashboard for the person who runs a library: books, members, loans and what is
 - Gradients are reserved for brand fills (see Colour), the backdrop scrim, book covers, ranked-list bars and the CTA tiles (`*-soft` to `glass-strong`).
 - Focus: a 2px solid `focus` outline with a 2px offset; inside the light sidebar the ring is `sidebar-ink`.
 
+## Motion
+
+- Motion is decoration only and always slow and small: a few pixels of float, one page turn on load. Nothing that carries information ever depends on it.
+- Every animation stops under `@media (prefers-reduced-motion: reduce)`.
+- The only animated element today is the dashboard HeroArt (see below).
+
 ## Layout
 
 - Dashboard grid: 248px floating glass Sidebar · fluid main column · 300px ActivityFeed, with the CheckoutBar fixed across the bottom.
 - Main column order: LibraryHeader, four StatTiles, MemberStrip, RankedList, then ReportCards.
 - Below 1200px the activity panel collapses behind a button; below 900px the sidebar becomes a top bar and the checkout bar keeps only the Book no. field and the Lend button.
+
+## Dashboard hero
+
+- Top of the dashboard, on the backdrop with no card: the QuickSearch pill alone on the first row; then the hero, at least 240px tall.
+- Hero left: the round brand mark, the date eyebrow (`brand-text`, uppercase label), the page title in `display` size serif, the lead line in `ink-muted`, and under it the two desk actions — "View loans" as a glass pill and "Lend a book" as the one brand-gradient button.
+- Hero right: **HeroArt**, an open book drawn in SVG — pages in `glass-hover` → `glass`, outlines in the brand gradient, the turning page and its lines in `gold`, the cover edge in `brand`, a soft `glow-red` → `glow-gold` light behind it, and a few loose pages and specks drifting above. The page turns once on load (1.4s); the book floats 6px over 7s; loose pages drift over 8–10s.
+- HeroArt is decorative: `aria-hidden`, no text, no data. It is coloured only through tokens, so it works in both themes with no image files. It is hidden below 1200px, where the hero shrinks back to its content.
+- Do not put a photo, a second logo or live data in this slot.
 
 ## Iconography
 

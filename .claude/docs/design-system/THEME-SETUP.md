@@ -31,6 +31,17 @@ The design system is in this folder (`README.md` is the brand book). The fronten
 3. **Theme toggle** — `inject(ThemeService).toggle()` from the shell. Its label goes through i18n keys (EN + RO), like every other string.
 4. Remove `src/material-theme.scss` once nothing references it.
 
+## Dashboard additions
+
+Built after the Phase 7b pass, dashboard only (no other screen changes):
+
+| File | Purpose |
+|---|---|
+| `frontend/src/app/features/dashboard/dashboard-search/` | **QuickSearch**: one pill that looks up books, members and open loans together through the existing `BookService`, `MemberService` and `LoanService` list calls (`search`, 3 rows each). No new endpoint. |
+| `frontend/src/app/features/dashboard/dashboard-hero-art/` | **HeroArt**: the decorative open-book SVG on the right of the hero. Tokens only, `aria-hidden`, motion off under `prefers-reduced-motion`, hidden below 1200px. |
+
+The hero's two actions ("View loans", "Lend a book") sit under the lead text, leaving the right side to HeroArt. See README → "Dashboard hero" and "Motion".
+
 ## Rules that still apply
 
 - **No hardcoded strings.** The sample text in `components/*/preview.html` and the screenshots (library names, members, counts) is illustration only; every label in the app goes through i18n keys.

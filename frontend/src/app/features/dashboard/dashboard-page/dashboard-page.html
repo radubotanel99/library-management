@@ -12,17 +12,19 @@
     <div class="la-hero__eyebrow">{{ today | date: 'fullDate' : undefined : locale() }}</div>
     <h1 class="la-hero__name">{{ 'dashboard.title' | translate }}</h1>
     <p class="la-hero__lead">{{ 'dashboard.lead' | translate }}</p>
+    <div class="la-hero__actions">
+      <a matButton="tonal" class="hero-secondary" routerLink="/loans">
+        <mat-icon aria-hidden="true">swap_horiz</mat-icon>
+        {{ 'dashboard.viewLoans' | translate }}
+      </a>
+      <button matButton="filled" (click)="openLendDialog()">
+        <mat-icon aria-hidden="true">add</mat-icon>
+        {{ 'dashboard.lend' | translate }}
+      </button>
+    </div>
   </div>
-  <div class="la-hero__actions">
-    <a matButton="tonal" class="hero-secondary" routerLink="/loans">
-      <mat-icon aria-hidden="true">swap_horiz</mat-icon>
-      {{ 'dashboard.viewLoans' | translate }}
-    </a>
-    <button matButton="filled" (click)="openLendDialog()">
-      <mat-icon aria-hidden="true">add</mat-icon>
-      {{ 'dashboard.lend' | translate }}
-    </button>
-  </div>
+  <!-- Decorative; hidden from screen readers and below tablet width. -->
+  <app-dashboard-hero-art class="hero-art" />
 </header>
 
 <div class="app-progress-slot">

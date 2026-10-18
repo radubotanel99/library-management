@@ -1,0 +1,158 @@
+:host {
+  position: relative;
+  display: grid;
+  place-items: center;
+  height: 240px;
+  pointer-events: none;
+}
+
+/* Soft crimson-and-gold light behind the book. */
+.glow {
+  position: absolute;
+  width: 340px;
+  height: 220px;
+  border-radius: 50%;
+  background: radial-gradient(circle, var(--glow-red), var(--glow-gold) 60%, transparent 70%);
+  filter: blur(50px);
+  opacity: 0.55;
+}
+
+.art {
+  position: relative;
+  width: min(100%, 440px);
+  height: 100%;
+  overflow: visible;
+}
+
+/* ---------- The book ---------- */
+
+.book {
+  filter: drop-shadow(0 18px 22px rgba(120, 40, 30, 0.25));
+  animation: float 7s ease-in-out infinite;
+}
+
+.cover {
+  fill: var(--brand);
+  opacity: 0.85;
+}
+
+.page {
+  fill: url(#hero-art-page);
+  stroke: url(#hero-art-stroke);
+  stroke-width: 3;
+}
+
+.spine {
+  stroke: url(#hero-art-stroke);
+  stroke-width: 3;
+}
+
+.lines path {
+  stroke: var(--brand);
+  stroke-width: 2.2;
+  opacity: 0.35;
+}
+
+/* Turns from lying on the left page to standing up on the right, once. */
+.turning {
+  transform-box: view-box;
+  transform-origin: 220px 155px;
+  animation: turn 1.4s cubic-bezier(0.3, 0.7, 0.2, 1) 0.3s both;
+}
+
+.turning__page {
+  fill: var(--glass-hover);
+  stroke: var(--gold);
+  stroke-width: 2.5;
+}
+
+.turning__lines path {
+  stroke: var(--gold);
+  stroke-width: 2;
+  opacity: 0.55;
+}
+
+/* ---------- Loose pages ---------- */
+
+.loose {
+  fill: url(#hero-art-page);
+  stroke-width: 1.4;
+}
+
+.loose--gold {
+  stroke: var(--gold);
+  opacity: 0.75;
+}
+
+.loose--brand {
+  stroke: var(--brand);
+  opacity: 0.5;
+}
+
+.speck--gold {
+  fill: var(--gold);
+  opacity: 0.7;
+}
+
+.speck--brand {
+  fill: var(--brand);
+  opacity: 0.5;
+}
+
+.drift {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: drift 8s ease-in-out infinite;
+}
+
+.drift--2 {
+  animation-duration: 10s;
+  animation-delay: -3s;
+}
+
+.drift--3 {
+  animation-duration: 9s;
+  animation-delay: -6s;
+}
+
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes turn {
+  from {
+    transform: scaleX(-1);
+    opacity: 0.6;
+  }
+  to {
+    transform: scaleX(1);
+    opacity: 1;
+  }
+}
+
+@keyframes drift {
+  0%,
+  100% {
+    transform: translate(0, 0) rotate(0deg);
+    opacity: 1;
+  }
+  50% {
+    transform: translate(4px, -12px) rotate(6deg);
+    opacity: 0.7;
+  }
+}
+
+/* Motion is decoration only: switch it all off when the user asks for less motion. */
+@media (prefers-reduced-motion: reduce) {
+  .book,
+  .turning,
+  .drift {
+    animation: none;
+  }
+}

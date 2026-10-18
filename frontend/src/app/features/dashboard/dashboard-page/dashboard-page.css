@@ -10,7 +10,24 @@
   align-items: center;
 }
 
+/* A taller hero: title block on the left, the open-book illustration filling the right. */
+.hero {
+  flex-wrap: nowrap;
+  min-height: 240px;
+}
+
 .hero-text {
+  min-width: 0;
+}
+
+/* The two desk actions sit under the lead text rather than on the far right. */
+.hero .la-hero__actions {
+  margin: var(--space-5) 0 0;
+  align-self: auto;
+}
+
+.hero-art {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -44,6 +61,14 @@
 
 /* Tablet width: the two panels stack. */
 @media (max-width: 1199.98px) {
+  .hero {
+    min-height: 0;
+  }
+
+  .hero-art {
+    display: none;
+  }
+
   .stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

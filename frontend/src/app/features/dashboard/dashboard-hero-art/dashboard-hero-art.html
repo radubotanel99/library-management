@@ -1,0 +1,62 @@
+<div class="glow"></div>
+
+<svg class="art" viewBox="0 0 440 240" fill="none" stroke-linecap="round" stroke-linejoin="round">
+  <defs>
+    <linearGradient id="hero-art-page" x1="0" x2="0" y1="0" y2="1">
+      <stop offset="0" stop-color="var(--glass-hover)" />
+      <stop offset="1" stop-color="var(--glass)" />
+    </linearGradient>
+    <linearGradient id="hero-art-stroke" x1="0" x2="1">
+      <stop offset="0" stop-color="var(--brand-bright)" />
+      <stop offset="1" stop-color="var(--brand)" />
+    </linearGradient>
+  </defs>
+
+  <!-- Loose pages and specks drifting above the book. -->
+  <g class="drift drift--1">
+    <path class="loose loose--gold" d="M318 40 l26 -6 l6 30 l-26 6z" transform="rotate(12 330 50)" />
+  </g>
+  <g class="drift drift--2">
+    <path class="loose loose--brand" d="M360 86 l18 -4 l4 22 l-18 4z" transform="rotate(-18 370 96)" />
+  </g>
+  <g class="drift drift--3">
+    <path class="loose loose--brand" d="M96 30 l20 -5 l5 24 l-20 5z" transform="rotate(-10 106 40)" />
+  </g>
+  <g class="drift drift--2">
+    <circle class="speck speck--gold" cx="300" cy="18" r="3" />
+    <circle class="speck speck--brand" cx="140" cy="62" r="2.5" />
+  </g>
+  <g class="drift drift--1">
+    <circle class="speck speck--gold" cx="388" cy="140" r="2" />
+  </g>
+
+  <g class="book">
+    <!-- Cover edge under the pages. -->
+    <path
+      class="cover"
+      d="M64 196 C120 184 180 186 220 206 C260 186 320 184 376 196 L376 204 C320 194 260 196 220 216 C180 196 120 194 64 204 Z"
+    />
+    <path class="page" d="M220 206 C180 186 120 184 64 196 L64 92 C120 80 180 82 220 104 Z" />
+    <path class="page" d="M220 206 C260 186 320 184 376 196 L376 92 C320 80 260 82 220 104 Z" />
+
+    <g class="lines">
+      <path d="M88 116 C130 108 170 110 200 122" />
+      <path d="M88 134 C130 126 170 128 200 140" />
+      <path d="M88 152 C130 144 170 146 200 158" />
+      <path d="M88 170 C120 164 150 165 176 172" />
+      <path d="M246 172 C276 162 310 160 352 166" />
+      <path d="M246 188 C276 178 316 176 352 182" />
+    </g>
+
+    <!-- The page that turns once when the dashboard opens. -->
+    <g class="turning">
+      <path class="turning__page" d="M220 104 C250 70 286 46 318 44 L322 150 C292 152 252 170 220 206 Z" />
+      <g class="turning__lines">
+        <path d="M246 90 C268 72 290 62 306 60" />
+        <path d="M248 108 C270 90 292 80 308 78" />
+      </g>
+    </g>
+
+    <path class="spine" d="M220 104 L220 206" />
+  </g>
+</svg>

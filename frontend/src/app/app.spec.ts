@@ -25,9 +25,7 @@ describe('App', () => {
     await fixture.whenStable();
 
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('.la-sidebar__brand')?.textContent).toContain(
-      'Library Management',
-    );
+    expect(compiled.querySelector('.la-sidebar__brand')?.textContent).toContain('My Library');
   });
 
   it('should link every screen from the sidebar', async () => {
@@ -40,19 +38,19 @@ describe('App', () => {
     expect(links.map((link) => link.getAttribute('href'))).toEqual([
       '/dashboard',
       '/books',
-      '/books/archive',
       '/categories',
       '/members',
       '/loans',
+      '/books/archive',
       '/settings',
     ]);
     expect(links.map((link) => link.textContent?.trim().replace(/^\S+\s+/, ''))).toEqual([
       'Dashboard',
       'Books',
-      'Archive',
       'Categories',
       'Members',
       'Loans',
+      'Archive',
       'Settings',
     ]);
   });
@@ -64,13 +62,13 @@ describe('App', () => {
     const toggle = (fixture.nativeElement as HTMLElement).querySelector(
       '.app-sidebar__footer button',
     );
-    expect(toggle?.textContent).toMatch(/Switch to (dark|light) theme/);
+    expect(toggle?.textContent).toMatch(/(Dark|Light) theme/);
   });
 
   it('should set the translated document title', async () => {
     const fixture = TestBed.createComponent(App);
     await fixture.whenStable();
 
-    expect(TestBed.inject(Title).getTitle()).toBe('Library Management');
+    expect(TestBed.inject(Title).getTitle()).toBe('My Library');
   });
 });

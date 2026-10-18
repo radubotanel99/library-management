@@ -148,6 +148,7 @@ Frontend: stat cards plus a most-borrowed list, replacing the empty landing page
 - Replace the current shell with the design-system Sidebar: one shared navigation linking every screen (dashboard, books, archive, categories, members, loans, settings), replacing any ad-hoc per-page links.
 - Restyle the dashboard with the design-system StatTile and RankedList, showing only what `GET /api/dashboard` returns. Out-of-scope pieces are listed under "Decision — Phase 7b scope" in `THEME-SETUP.md`.
 - Show book and loan states with the StatusBadge mapping in `THEME-SETUP.md`: icon + word, never colour alone.
+- Dashboard hero: a taller hero with the desk actions under the title, the decorative HeroArt (open book, SVG + CSS, tokens only, reduced-motion safe, hidden below 1200px) on the right, and the QuickSearch pill above it (books, members and open loans through the existing list endpoints — no new endpoint). See "Dashboard additions" in `THEME-SETUP.md`.
 - Pass over every screen from Phases 2–7 for consistent spacing, table density and button placement, following the design-system README (one primary button per view, CSS variables only, no hard-coded colours or sizes).
 - Add empty, loading and error states wherever a table or form can be in one of those states and currently isn't handled.
 - Check responsive layout at common desk/tablet widths — librarians may use this from a tablet at the front desk.
