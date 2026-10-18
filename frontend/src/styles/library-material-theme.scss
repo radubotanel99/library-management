@@ -19,6 +19,16 @@ html {
 }
 html[data-theme='dark'] { color-scheme: dark; }
 
+// Laptop tier: below this width (a laptop at 125-150 % display scaling) Material controls
+// sit one density step tighter. Keep in step with the media query at the end of tokens.css
+// and LAPTOP_LAYOUT in core/layout/breakpoints.ts.
+$laptop-max: 1599.98px;
+@media (max-width: $laptop-max) {
+  html {
+    @include mat.theme((density: -1));
+  }
+}
+
 // Map Material's system roles onto Library Admin tokens (both themes follow automatically).
 // mat.theme() above emits *light* values for every role; any role not re-pointed here would
 // stay light in dark mode, so every colour role a component reads is mapped.

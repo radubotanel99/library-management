@@ -30,7 +30,7 @@ A dashboard for the person who runs a library: books, members, loans and what is
 
 ## Space, shape, depth
 
-- Spacing steps: `space-1` 4 · `space-2` 8 · `space-3` 12 · `space-4` 16 · `space-5` 20 · `space-6` 24 · `space-8` 32 · `space-10` 40 · `space-12` 48. Panels pad `space-6`; sections sit `space-6` apart.
+- Spacing steps (default tier, in rem so they follow the browser font size; px shown): `space-1` 4 · `space-2` 8 · `space-3` 12 · `space-4` 16 · `space-5` 20 · `space-6` 24 · `space-8` 32 · `space-10` 40 · `space-12` 48. In the laptop tier (see Layout) `space-4`…`space-12` step down to 14 · 16 · 20 · 28 · 36 · 44. Panels pad `space-6`; sections sit `space-6` apart.
 - Radii: `radius-sm` for covers and inputs; `radius-md` for row hover; `radius-lg` for nav items and CTA tiles; `radius-xl` for glass surfaces and stat tiles; `radius-2xl` for large panels and the sidebar; `radius-pill` for buttons, badges, search fields, avatars, the hero mark and the Lend button.
 - Depth is soft and floating: `shadow-float` on glass surfaces, `shadow-float-lg` on the largest panels, `shadow-brand` under brand gradients, `shadow-bar` on the checkout bar. `shadow-card` is a legacy alias of `shadow-float`; do not use it in new work.
 - Glass blur: `blur(var(--blur-glass)) saturate(1.2)` (22px). The sidebar uses 24px; glass buttons and bars use 16px. Always include the `-webkit-backdrop-filter` prefix.
@@ -45,13 +45,15 @@ A dashboard for the person who runs a library: books, members, loans and what is
 
 ## Layout
 
-- Dashboard grid: 248px floating glass Sidebar · fluid main column · 300px ActivityFeed, with the CheckoutBar fixed across the bottom.
+- **Two size tiers.** Default (1600 CSS px and wider) and **laptop** (below 1600px — a laptop at 125–150 % display scaling only gives the browser ~1280–1536 CSS px). The laptop tier tightens spacing, the large type (`display`, `stat`, `h1`, `h2`, page title), the component sizes (`size-*` tokens: sidebar 248 → 216px, nav item, controls, hero mark, ring, hero height, backdrop) and sets Angular Material density to −1. **Body text (14px and below) is never shrunk.** The values live in `tokens.css` (`@media (max-width: 1599.98px)`) and are listed in `tokens.json` → `responsive`.
+- Type, spacing and component sizes are rem tokens. Raw `px` is only for hairlines, outlines, shadows, blur, radii and SVG coordinates; anything else gets a token.
+- Dashboard grid: 248px (216px in the laptop tier) floating glass Sidebar · fluid main column · 300px ActivityFeed, with the CheckoutBar fixed across the bottom.
 - Main column order: LibraryHeader, four StatTiles, MemberStrip, RankedList, then ReportCards.
 - Below 1200px the activity panel collapses behind a button; below 900px the sidebar becomes a top bar and the checkout bar keeps only the Book no. field and the Lend button.
 
 ## Dashboard hero
 
-- Top of the dashboard, on the backdrop with no card: the QuickSearch pill alone on the first row; then the hero, at least 240px tall.
+- Top of the dashboard, on the backdrop with no card: the QuickSearch pill alone on the first row; then the hero, at least `size-hero-min` tall (240px; 184px in the laptop tier).
 - Hero left: the round brand mark, the date eyebrow (`brand-text`, uppercase label), the page title in `display` size serif, the lead line in `ink-muted`, and under it the two desk actions — "View loans" as a glass pill and "Lend a book" as the one brand-gradient button.
 - Hero right: **HeroArt**, an open book drawn in SVG — pages in `glass-hover` → `glass`, outlines in the brand gradient, the turning page and its lines in `gold`, the cover edge in `brand`, a soft `glow-red` → `glow-gold` light behind it, and a few loose pages and specks drifting above. The page turns once on load (1.4s); the book floats 6px over 7s; loose pages drift over 8–10s.
 - HeroArt is decorative: `aria-hidden`, no text, no data. It is coloured only through tokens, so it works in both themes with no image files. It is hidden below 1200px, where the hero shrinks back to its content.

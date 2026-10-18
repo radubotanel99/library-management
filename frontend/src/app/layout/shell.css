@@ -23,26 +23,26 @@
 }
 
 .app-backdrop__glow--rose {
-  width: 620px;
-  height: 620px;
-  left: -160px;
-  top: -200px;
+  width: var(--backdrop-glow-m);
+  height: var(--backdrop-glow-m);
+  left: -10rem;
+  top: -12.5rem;
   background: var(--glow-rose);
 }
 
 .app-backdrop__glow--gold {
-  width: 520px;
-  height: 520px;
-  right: -120px;
-  top: 120px;
+  width: var(--backdrop-glow-s);
+  height: var(--backdrop-glow-s);
+  right: -7.5rem;
+  top: 7.5rem;
   background: var(--glow-gold);
 }
 
 .app-backdrop__glow--blush {
-  width: 700px;
-  height: 500px;
+  width: var(--backdrop-glow-l);
+  height: var(--backdrop-glow-l-h);
   left: 30%;
-  bottom: -260px;
+  bottom: -16rem;
   background: var(--glow-blush);
 }
 
@@ -52,11 +52,11 @@
   left: -40px;
   right: -40px;
   top: 0;
-  height: 470px;
+  height: var(--backdrop-shelf-h);
   display: flex;
   align-items: flex-end;
-  gap: 10px;
-  padding-bottom: 110px;
+  gap: 0.625rem;
+  padding-bottom: var(--backdrop-shelf-pad);
   overflow: hidden;
   filter: blur(14px) saturate(1.1);
   opacity: 0.8;

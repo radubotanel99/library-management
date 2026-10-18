@@ -51,8 +51,8 @@ body {
 
 /* Page titles sit straight on the backdrop, set large in the serif. */
 .app-page__header .h1 {
-  font-size: 40px;
-  line-height: 46px;
+  font-size: var(--fs-page-title);
+  line-height: var(--lh-page-title);
   letter-spacing: -0.015em;
 }
 
@@ -151,7 +151,7 @@ body {
 
 /* Header cells use the design system's `label` style (tokens.css .label) plus uppercase. */
 .app-table .mat-mdc-header-cell {
-  font-size: 12px;
+  font-size: var(--fs-caption);
   font-weight: 700;
   letter-spacing: 0.08em;
   text-transform: uppercase;

@@ -96,6 +96,7 @@ Other rules:
 - One typed Angular service per feature owning all HTTP calls; components never call `HttpClient` directly.
 - API base URL from `environment.ts` — never hardcoded.
 - Angular Material components; avoid hand-rolled CSS where a Material component exists.
+- Type, spacing and component sizes use the rem tokens in `tokens.css` (`--fs-*`, `--space-*`, `--size-*`), never raw `px`; below 1600px the laptop tier overrides them (see design-system `README.md` → Layout).
 - All user-facing text goes through i18n keys. **No hardcoded strings**, in either language.
 - Language preference lives in `localStorage`, never on the server.
 

@@ -2,15 +2,15 @@
   position: relative;
   display: grid;
   place-items: center;
-  height: 240px;
+  height: var(--size-hero-min);
   pointer-events: none;
 }
 
 /* Soft crimson-and-gold light behind the book. */
 .glow {
   position: absolute;
-  width: 340px;
-  height: 220px;
+  width: var(--size-hero-glow-w);
+  height: var(--size-hero-glow-h);
   border-radius: 50%;
   background: radial-gradient(circle, var(--glow-red), var(--glow-gold) 60%, transparent 70%);
   filter: blur(50px);
@@ -19,7 +19,7 @@
 
 .art {
   position: relative;
-  width: min(100%, 440px);
+  width: min(100%, var(--size-hero-art-w));
   height: 100%;
   overflow: visible;
 }

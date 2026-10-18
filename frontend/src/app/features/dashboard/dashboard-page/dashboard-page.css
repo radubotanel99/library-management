@@ -13,7 +13,7 @@
 /* A taller hero: title block on the left, the open-book illustration filling the right. */
 .hero {
   flex-wrap: nowrap;
-  min-height: 240px;
+  min-height: var(--size-hero-min);
 }
 
 .hero-text {

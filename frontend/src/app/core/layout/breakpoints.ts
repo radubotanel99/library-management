@@ -14,9 +14,17 @@ export const COMPACT_LAYOUT = '(max-width: 899.98px)';
 
 /**
  * Below 1200px — a tablet at the front desk, or a desktop with the sidebar
- * taking its 232px — wide tables drop their low-priority columns.
+ * taking its width — wide tables drop their low-priority columns.
  */
 export const TABLET_LAYOUT = '(max-width: 1199.98px)';
+
+/**
+ * Below 1600px — a laptop at 125-150 % display scaling, which gives the browser
+ * only ~1280-1536 CSS pixels. The "laptop tier" tightens spacing, large type and
+ * component sizes (tokens.css) and Material density (library-material-theme.scss).
+ * CSS owns the visual change; use this only when TypeScript needs to know.
+ */
+export const LAPTOP_LAYOUT = '(max-width: 1599.98px)';
 
 /**
  * `true` while `query` matches, as a signal. Must be called in an injection

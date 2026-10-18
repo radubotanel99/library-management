@@ -6,9 +6,9 @@ The design system is in this folder (`README.md` is the brand book). The fronten
 
 | File | Purpose |
 |---|---|
-| `frontend/src/styles/tokens.css` | Colours (light + dark), spacing, radii, type classes as CSS variables. Generated from `tokens.json` here — change the design system, then regenerate; don't hand-edit. |
+| `frontend/src/styles/tokens.css` | Colours (light + dark), spacing, radii, type classes, component sizes (`size-*`) and the laptop tier (`@media (max-width: 1599.98px)`) as CSS variables. Spacing, type and sizes are rem. Source of truth is `tokens.json` here (the laptop values are under `responsive`); there is no generator, so edit both files together. |
 | `frontend/src/styles/library-components.css` | The `.la-*` classes: sidebar, header, stat tiles, badges, ranked list, activity feed, checkout bar. |
-| `frontend/src/styles/library-material-theme.scss` | Angular Material theme mapped onto the tokens. Replaces `src/material-theme.scss` once wired. |
+| `frontend/src/styles/library-material-theme.scss` | Angular Material theme mapped onto the tokens. Replaces `src/material-theme.scss` once wired. Density is 0, and −1 below 1600px (`$laptop-max`). |
 | `frontend/src/app/core/theme/theme.service.ts` | Light/dark switch: sets `data-theme` on `<html>`, preference in `localStorage` (same pattern as `I18nService`). |
 
 ## Wiring steps (Phase 7b)
@@ -44,6 +44,7 @@ The hero's two actions ("View loans", "Lend a book") sit under the lead text, le
 
 ## Rules that still apply
 
+- **Sizes come from tokens.** Type, spacing and component dimensions use the rem tokens in `tokens.css` (`--fs-*`, `--space-*`, `--size-*`), never raw `px`, so the laptop tier reaches them. When adding a size, add a token and, if it should shrink on laptops, its override in the `@media (max-width: 1599.98px)` block — and keep the `breakpoint` in three places in step: `tokens.css`, `$laptop-max` in `library-material-theme.scss`, `LAPTOP_LAYOUT` in `core/layout/breakpoints.ts`.
 - **No hardcoded strings.** The sample text in `components/*/preview.html` and the screenshots (library names, members, counts) is illustration only; every label in the app goes through i18n keys.
 - **Only what the spec defines.** The dashboard shows what `GET /api/dashboard` returns: `totalCopies`, `totalMembers`, `loansActive`, `loansOverdue`, `mostBorrowed`. Several design-system pieces go beyond the current spec and need an explicit decision before anything is built from them:
   - **ActivityFeed**, **MemberStrip** (most active members), **ReportCard** — no endpoint or spec section.

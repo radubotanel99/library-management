@@ -152,6 +152,7 @@ Frontend: stat cards plus a most-borrowed list, replacing the empty landing page
 - Pass over every screen from Phases 2–7 for consistent spacing, table density and button placement, following the design-system README (one primary button per view, CSS variables only, no hard-coded colours or sizes).
 - Add empty, loading and error states wherever a table or form can be in one of those states and currently isn't handled.
 - Check responsive layout at common desk/tablet widths — librarians may use this from a tablet at the front desk.
+- Laptop tier: below 1600 CSS px (laptops at 125–150 % display scaling) spacing, large type and component sizes step down and Material density goes to −1; body text does not shrink. Check at 1280, 1536 and 2560 wide. See "Layout" in the design-system `README.md`.
 - Re-audit for hardcoded strings that slipped in while screens were built quickly — everything still routes through i18n keys, EN and RO both checked.
 
 **Done when:** every screen uses the design system in both light and dark theme, the shared sidebar links every screen, every screen handles empty/loading/error states, the app is usable at tablet width, and no hardcoded strings remain in either language.
